@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terminal — новый рабочий стол</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0b0d; --s:#0f1115; --s2:#14171d; --s3:#191d24;
+    --line:rgba(226,232,240,.09); --line2:rgba(226,232,240,.16);
+    --ink:#e9e6df; --dim:#a2a6ae; --mute:#6a6f79;
+    --acc:#f0b45a; --acc2:rgba(240,180,90,.16);
+    --up:#3ddc97; --up2:rgba(61,220,151,.14);
+    --dn:#f07167; --dn2:rgba(240,113,103,.14);
+    --ma:#8eb4ff;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--ink); }
+  body { font-family:"IBM Plex Sans",sans-serif; display:flex; min-height:100vh; }
+  .num { font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; }
+  aside.nav {
+    width:220px; flex:none; border-right:1px solid var(--line); display:flex; flex-direction:column;
+    position:sticky; top:0; height:100vh; background:var(--bg);
+  }
+  .brand { display:flex; gap:10px; align-items:center; padding:14px 14px 8px; }
+  .mark { width:28px; height:28px; border-radius:7px; background:var(--acc); color:#1a1408; display:grid; place-items:center; font-weight:600; }
+  .brand b { font-size:14px; } .brand span { display:block; color:var(--mute); font-size:11px; }
+  .grp { padding:12px 16px 4px; color:var(--mute); font-size:10px; letter-spacing:.14em; font-weight:600; }
+  nav button {
+    width:calc(100% - 16px); margin:0 8px; text-align:left; background:transparent; border:0; color:var(--dim);
+    font:inherit; font-size:13.5px; padding:7px 10px; border-radius:8px; cursor:pointer;
+  }
+  nav button:hover { background:var(--s3); color:var(--ink); }
+  nav button.on { background:var(--acc2); color:var(--acc); }
+  .side-foot { margin-top:auto; padding:12px; border-top:1px solid var(--line); }
+  .side-foot button { width:100%; background:var(--s2); color:var(--ink); border:1px solid var(--line2); border-radius:8px; padding:8px; font:inherit; cursor:pointer; }
+  main { flex:1; min-width:0; display:flex; flex-direction:column; }
+  .top { height:52px; display:flex; align-items:center; gap:10px; padding:0 16px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--bg); z-index:3; }
+  .search { flex:1; max-width:360px; background:var(--s2); border:1px solid var(--line2); border-radius:8px; padding:7px 10px; color:var(--ink); font:inherit; font-size:13px; }
+  .sp { flex:1; }
+  .pill { font-size:11.5px; padding:3px 8px; border-radius:999px; background:var(--s3); color:var(--dim); border:1px solid var(--line); }
+  .pill.ok { color:var(--up); background:var(--up2); } .pill.warn { color:var(--acc); background:var(--acc2); }
+  .page { display:none; padding:14px 16px 28px; } .page.on { display:block; }
+  h1 { font-size:20px; margin:0; font-weight:600; } .sub { color:var(--mute); font-size:12px; margin-top:2px; }
+  .head { display:flex; justify-content:space-between; gap:12px; align-items:flex-end; margin-bottom:12px; }
+  .grid { display:grid; gap:10px; } .g4 { grid-template-columns:repeat(4,1fr); } .g2 { grid-template-columns:1.4fr .8fr; } .g3 { grid-template-columns:1fr 1fr 1fr; }
+  .card { background:var(--s); border:1px solid var(--line); border-radius:10px; padding:12px; }
+  .card h2 { margin:0 0 8px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:600; }
+  .note { color:var(--mute); font-size:12px; line-height:1.45; }
+  .up { color:var(--up); } .dn { color:var(--dn); }
+  .banner { font-size:12px; color:var(--dim); border:1px dashed var(--line2); border-radius:8px; padding:8px 10px; margin-bottom:12px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; font-size:10px; letter-spacing:.08em; color:var(--mute); font-weight:600; padding:6px; border-bottom:1px solid var(--line); }
+  td { padding:7px 6px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  tr.clk { cursor:pointer; } tr.clk:hover td { background:rgba(240,180,90,.06); }
+  .tabs { display:flex; gap:4px; background:var(--s2); padding:3px; border-radius:8px; border:1px solid var(--line); width:fit-content; }
+  .tabs button { border:0; background:transparent; color:var(--dim); font:inherit; font-size:12px; padding:5px 10px; border-radius:6px; cursor:pointer; }
+  .tabs button.on { background:var(--acc); color:#1a1408; font-weight:600; }
+  .row { display:flex; justify-content:space-between; gap:8px; padding:7px 0; border-bottom:1px solid var(--line); font-size:13px; }
+  .row:last-child { border-bottom:0; }
+  .k { font-size:20px; font-weight:600; }
+  .desk { display:grid; grid-template-columns:250px 1fr 280px; gap:10px; min-height:640px; }
+  .box { background:#0c0e12; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .wl-h, .dep-h { display:flex; justify-content:space-between; padding:8px 10px; color:var(--mute); font-size:10px; letter-spacing:.1em; }
+  .wl button { width:100%; display:grid; grid-template-columns:52px 1fr auto; gap:6px; align-items:center; background:transparent; border:0; border-bottom:1px solid var(--line); color:inherit; font:inherit; font-size:12px; padding:7px 10px; cursor:pointer; text-align:left; }
+  .wl button.on, .wl button:hover { background:var(--s3); }
+  svg.plot { width:100%; display:block; }
+  .px { font-size:26px; font-weight:600; letter-spacing:-.03em; }
+  .legend { display:flex; gap:10px; color:var(--mute); font-size:11px; margin-top:4px; }
+  .sw { width:12px; height:2px; display:inline-block; margin-right:4px; vertical-align:middle; }
+  .depth { font-size:11.5px; }
+  .depth .ln { display:grid; grid-template-columns:64px 1fr 36px; gap:4px; align-items:center; padding:1px 8px; }
+  .bar { height:14px; border-radius:2px; }
+  .ask { background:rgba(240,113,103,.55); margin-left:auto; }
+  .bid { background:rgba(61,220,151,.5); }
+  .tape td { font-size:11.5px; padding:3px 8px; }
+  .cal { display:flex; gap:8px; overflow:auto; }
+  .day { min-width:120px; background:var(--s2); border:1px solid var(--line); border-radius:8px; padding:8px; }
+  .heat { display:grid; grid-template-columns:repeat(9,1fr); gap:4px; }
+  .heat i { display:block; height:36px; border-radius:4px; background:rgba(240,180,90,.15); }
+  .tree { display:grid; grid-template-columns:1.4fr 1fr 1fr; grid-template-rows:90px 70px; gap:6px; }
+  .tree div { border-radius:8px; padding:8px; background:var(--s3); border:1px solid var(--line); }
+  .sig { display:grid; grid-template-columns:64px 1fr auto; gap:10px; align-items:center; }
+  .score { font-size:26px; color:var(--acc); font-weight:600; }
+  .drawer {
+    position:fixed; top:0; right:0; height:100vh; width:360px; background:var(--s); border-left:1px solid var(--line2);
+    transform:translateX(100%); transition:transform .18s ease; z-index:20; padding:16px; overflow:auto;
+  }
+  .drawer.on { transform:none; }
+  .shade { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:19; display:none; }
+  .shade.on { display:block; }
+  .btn { background:var(--acc); color:#1a1408; border:0; border-radius:8px; padding:7px 12px; font:inherit; font-weight:600; cursor:pointer; }
+  .btn.ghost { background:transparent; color:var(--ink); border:1px solid var(--line2); font-weight:500; }
+  @media (max-width:1100px) { .desk { grid-template-columns:1fr; } .g4,.g2,.g3 { grid-template-columns:1fr 1fr; } aside.nav { display:none; } }
+</style>
+</head>
+<body>
+<aside class="nav">
+  <div class="brand"><div class="mark">T</div><div><b>Terminal</b><span>рабочий стол</span></div></div>
+  <div class="grp">ОБЗОР</div>
+  <nav>
+    <button class="on" data-page="today">Сегодня</button>
+    <button data-page="chart">График</button>
+  </nav>
+  <div class="grp">ТОРГОВЛЯ</div>
+  <nav>
+    <button data-page="signals">Сигналы</button>
+    <button data-page="volume">Объёмы</button>
+    <button data-page="bot">Бот</button>
+  </nav>
+  <div class="grp">СЧЁТ</div>
+  <nav>
+    <button data-page="portfolio">Портфель</button>
+    <button data-page="calc">Расчёты</button>
+  </nav>
+  <div class="grp">РАЗБОР</div>
+  <nav>
+    <button data-page="instruments">Инструменты</button>
+    <button data-page="reporting">Отчётность</button>
+  </nav>
+  <div class="side-foot"><button id="openSet">Настройки и агенты</button></div>
+</aside>
+<main>
+  <div class="top">
+    <input class="search" id="q" placeholder="Тикер или раздел">
+    <span class="sp"></span>
+    <span class="pill warn">песочница</span>
+    <span class="pill">макет · не живые котировки</span>
+  </div>
+
+  <section class="page on" id="today">
+    <div class="banner">Утро. Очередь действий, календарь и риск в рублях. Полный список сигналов сюда не дублируется.</div>
+    <div class="head"><div><h1>Сегодня</h1><div class="sub">31.10.2026 · режим: нейтральный</div></div>
+      <div class="num">IMOEX 2 548 <span class="dn">−0,08%</span></div></div>
+    <div class="grid g4" style="margin-bottom:10px">
+      <div class="card"><div class="note">Нефть</div><div class="k num dn">112,49</div><div class="note">−1,1% · фьючерс BR</div></div>
+      <div class="card"><div class="note">Доллар</div><div class="k num dn">80,56</div><div class="note">−0,1% · курс ЦБ</div></div>
+      <div class="card"><div class="note">Юань</div><div class="k num">12,09</div><div class="note">0,0%</div></div>
+      <div class="card"><div class="note">Открытый риск</div><div class="k num">— ₽</div><div class="note">сумма до стопов, из портфеля</div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card">
+        <h2>Сделать сегодня</h2>
+        <div class="row clk" data-ticker="GAZP"><div><b>GAZP</b><div class="note">Открытый сигнал в плюсе</div></div><div class="up num">+14,7%</div></div>
+        <div class="row clk" data-ticker="AFLT"><div><b>AFLT</b><div class="note">Открытый сигнал в плюсе</div></div><div class="up num">+10,4%</div></div>
+        <div class="row clk" data-ticker="IVAT"><div><b>IVAT</b><div class="note">Открытый сигнал в минусе</div></div><div class="dn num">−5,9%</div></div>
+        <div class="row clk" data-ticker="TATN"><div><b>TATN</b><div class="note">Можно зафиксировать часть</div></div><div class="up num">+0,5%</div></div>
+      </div>
+      <div class="card">
+        <h2>Календарь 7 дней</h2>
+        <div class="cal">
+          <div class="day"><b>Пн</b><div class="note">заседание нет</div></div>
+          <div class="day"><b>Вт</b><div class="note">отчётность: нет в макете</div></div>
+          <div class="day"><b>Ср</b><div class="note">отсечек нет в макете</div></div>
+          <div class="day"><b>Чт</b><div class="note">тихо</div></div>
+        </div>
+        <div class="note" style="margin-top:8px">Даты подставятся из календаря проекта. Пустая ячейка честнее выдуманного события.</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:10px">
+      <h2>Кривая счёта за день против IMOEX</h2>
+      <svg class="plot" id="dayCurve" viewBox="0 0 760 160"></svg>
+      <div class="note">Золото — счёт, синий — IMOEX. Форма образца, суммы не подставлены.</div>
+    </div>
+  </section>
+
+  <section class="page" id="chart">
+    <div class="head"><div><h1>График</h1><div class="sub">Экран бумаги: список, свечи и объём, стакан и лента</div></div>
+      <div class="tabs" id="tf"><button>1м</button><button>10м</button><button>1ч</button><button class="on">День</button><button>Неделя</button></div></div>
+    <div class="desk">
+      <div class="box wl" id="wl">
+        <div class="wl-h"><span>СПИСОК</span><span>день</span></div>
+      </div>
+      <div class="box">
+        <div style="padding:10px 12px 0">
+          <div class="note">PRICE & VOLUME · <span id="sym">SBER</span> · день · SMA 20</div>
+          <div class="px num up" id="px">318,40 <span style="font-size:14px">+0,42%</span></div>
+          <div class="legend"><span><i class="sw" style="background:#8eb4ff"></i>SMA 20</span><span><i class="sw" style="background:#3ddc97"></i>объём вверх</span><span><i class="sw" style="background:#f07167"></i>объём вниз</span></div>
+          <div class="note" id="meta">Диапазон дня, VWAP и спред появятся из свечи и стакана. В макете это подписи, не расчёт.</div>
+        </div>
+        <svg class="plot" id="ux" viewBox="0 0 860 400"></svg>
+      </div>
+      <div>
+        <div class="box depth" style="margin-bottom:10px">
+          <div class="dep-h"><span>СТАКАН · 10</span><span id="spr">спред —</span></div>
+          <div id="book"></div>
+          <svg class="plot" id="cumb" viewBox="0 0 280 70"></svg>
+        </div>
+        <div class="box">
+          <div class="dep-h"><span>ЛЕНТА</span><span>последние</span></div>
+          <table class="tape" id="tape"></table>
+        </div>
+        <div class="card" style="margin-top:10px">
+          <h2>Позиция по бумаге</h2>
+          <div id="posLine" class="note">SBER · в портфеле, долгосрочный. Количество из счёта, здесь образец: 100 шт, средняя 250.</div>
+        </div>
+      </div>
+    </div>
+    <div class="note" style="margin-top:8px">Свечи, стакан и лента нарисованы как образец оформления. Это не история торгов и не заявочная книга.</div>
+  </section>
+
+  <section class="page" id="signals">
+    <div class="banner">Одна очередь. Источник — метка, не отдельный мир. Клик открывает карточку, из неё — график.</div>
+    <div class="head"><div><h1>Сигналы</h1><div class="sub">Новые сверху</div></div>
+      <div class="tabs"><button class="on">Все</button><button>Лонг</button><button>Шорт</button></div></div>
+    <div class="card" style="margin-bottom:8px">
+      <div class="sig">
+        <div class="score num">73</div>
+        <div><b>FLOT · лонг</b> <span class="pill">свой</span><div class="note">Вход 84,94 · цель 94,74 · стоп 81,02</div><div class="note">Риск в ₽: от размера позиции, в макете не посчитан. История таких входов: из журнала.</div></div>
+        <button class="btn ghost" data-ticker="FLOT">Карточка</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sig">
+        <div class="score num">68</div>
+        <div><b>SBER · лонг</b> <span class="pill">свой</span><div class="note">Вход 318,40 · цель 345 · стоп 305</div><div class="note">Сектор: финансы. Рядом не показывать второй такой же список на «Сегодня».</div></div>
+        <button class="btn ghost" data-ticker="SBER">Карточка</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" id="volume">
+    <div class="head"><div><h1>Объёмы</h1><div class="sub">Вечерний разбор. Днём тот же смысл смотреть на графике бумаги.</div></div></div>
+    <div class="card" style="margin-bottom:10px">
+      <h2>Часы выбранной бумаги · образец плотности</h2>
+      <div class="heat" id="heat"></div>
+      <div class="note" style="margin-top:6px">10:00–18:00. Яркость не из торгов, только форма виджета.</div>
+    </div>
+    <div class="card">
+      <table>
+        <tr><th>Тикер</th><th>К среднему</th><th>Оборот</th><th>Почему</th></tr>
+        <tr class="clk" data-ticker="LKOH"><td><b>LKOH</b></td><td class="num">3,1×</td><td class="num">9,4 млрд</td><td>оценка высокая, сигнал есть</td></tr>
+        <tr class="clk" data-ticker="SBER"><td><b>SBER</b></td><td class="num">2,4×</td><td class="num">12,8 млрд</td><td>оценка высокая, сигнал есть</td></tr>
+        <tr class="clk" data-ticker="GAZP"><td><b>GAZP</b></td><td class="num">1,6×</td><td class="num">8,1 млрд</td><td>средняя, сигнала нет</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section class="page" id="portfolio">
+    <div class="banner">Это экран риска. Отдельной вкладки «Риск» нет: концентрация и просадка живут здесь.</div>
+    <div class="head"><div><h1>Портфель</h1><div class="sub">Долгосрочный и спекуляция</div></div></div>
+    <div class="grid g2" style="margin-bottom:10px">
+      <div class="card">
+        <h2>Стоимость против IMOEX и просадка</h2>
+        <svg class="plot" id="eq" viewBox="0 0 760 180"></svg>
+        <div class="note">Верхняя линия — счёт, нижняя — просадка. Форма образца. Просадка из журнала счёта, не из бота.</div>
+      </div>
+      <div class="card">
+        <h2>Доли секторов</h2>
+        <div class="tree">
+          <div style="grid-row:span 2">Финансы<div class="note">пример клетки</div></div>
+          <div>Нефть</div><div>Газ</div>
+          <div>Прочее</div><div>Кэш</div>
+        </div>
+        <div class="note" style="margin-top:6px">Площади подставятся из долей портфеля. Сейчас это схема, не ваш счёт.</div>
+      </div>
+    </div>
+    <div class="card">
+      <table>
+        <tr><th>Тикер</th><th>Портфель</th><th>Кол-во</th><th>Средняя</th><th>Цена</th></tr>
+        <tr class="clk" data-ticker="SBER"><td><b>SBER</b></td><td>долгосрочный</td><td class="num">100</td><td class="num">250,00</td><td class="num">318,40</td></tr>
+        <tr class="clk" data-ticker="FLOT"><td><b>FLOT</b></td><td>спекуляция</td><td class="num">200</td><td class="num">84,94</td><td class="num">86,10</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section class="page" id="calc">
+    <div class="head"><div><h1>Расчёты</h1><div class="sub">Размер позиции и усреднение. Не второй портфель.</div></div></div>
+    <div class="card">
+      <div class="row"><span>Тикер</span><input id="cT" value="SBER" style="width:100px;background:var(--s2);color:var(--ink);border:1px solid var(--line2);border-radius:6px;padding:4px 8px"></div>
+      <div class="row"><span>Стоп, ₽</span><span class="num">305</span></div>
+      <div class="row"><span>Потеря, которую допускаю, ₽</span><span class="num">5 000</span></div>
+      <div class="row"><span>Размер</span><b class="num" id="cOut">считается на проекте</b></div>
+      <div class="note">Формула уже есть во вкладке расчётов. Макет её не подменяет.</div>
+    </div>
+  </section>
+
+  <section class="page" id="instruments">
+    <div class="banner">Это сканер. Отдельного режима «Сканер» не заводим.</div>
+    <div class="head"><div><h1>Инструменты</h1><div class="sub">Оборот, день, сектор. Клик — карточка.</div></div>
+      <div class="tabs"><button class="on">Акции</button><button>Облигации</button><button>Фонды</button></div></div>
+    <div class="card">
+      <table>
+        <tr><th>Тикер</th><th>Цена</th><th>День</th><th>Оборот, млн</th><th>Сигнал</th></tr>
+        <tr class="clk" data-ticker="SBER"><td><b>SBER</b></td><td class="num">318,40</td><td class="up num">+0,42%</td><td class="num">12 800</td><td>есть</td></tr>
+        <tr class="clk" data-ticker="LKOH"><td><b>LKOH</b></td><td class="num">6 420</td><td class="up num">+0,80%</td><td class="num">9 400</td><td>есть</td></tr>
+        <tr class="clk" data-ticker="GAZP"><td><b>GAZP</b></td><td class="num">118,20</td><td class="dn num">−0,30%</td><td class="num">8 100</td><td>нет</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section class="page" id="reporting">
+    <div class="head"><div><h1>Отчётность</h1><div class="sub">Плотность этой вкладки — образец для остальных. Тема остаётся тёмной.</div></div>
+      <div class="tabs"><button class="on">4 квартала</button><button>5 лет</button></div></div>
+    <div class="card" style="margin-bottom:10px">
+      <div class="head" style="margin:0">
+        <div><b>SBER</b><div class="note">Сектор: финансы · цена 318,40 · день +0,42%</div></div>
+        <div class="note">Следующий отчёт: из календаря<br>Свежесть ряда: из кэша</div>
+      </div>
+    </div>
+    <div class="card">
+      <table>
+        <tr><th></th><th>кв −3</th><th>кв −2</th><th>кв −1</th><th>последний</th><th>к прошлому</th></tr>
+        <tr><td>Выручка</td><td class="note">нет ряда</td><td class="note">нет ряда</td><td class="note">нет ряда</td><td class="note">нет ряда</td><td class="note">—</td></tr>
+        <tr><td>Прибыль</td><td class="note">нет ряда</td><td class="note">нет ряда</td><td class="note">нет ряда</td><td class="note">нет ряда</td><td class="note">—</td></tr>
+        <tr><td>FCF</td><td class="note">нет ряда</td><td class="note">нет ряда</td><td class="note">нет ряда</td><td class="note">нет ряда</td><td class="note">—</td></tr>
+      </table>
+      <div class="note" style="margin-top:8px">Консенсуса аналитиков нет. Колонка прогноза не рисуется. Дивиденды — под таблицей, когда есть политика и выплаты.</div>
+    </div>
+  </section>
+
+  <section class="page" id="bot">
+    <div class="banner">Разбор, не витрина. Пока это песочница: заявок на биржу нет.</div>
+    <div class="head"><div><h1>Бот</h1><div class="sub">Сначала кривая и просадка, потом список стратегий</div></div>
+      <button class="btn ghost" id="botSet">Настройки бота</button></div>
+    <div class="grid g4" style="margin-bottom:10px">
+      <div class="card"><div class="note">Статус</div><div class="k" style="color:var(--acc);font-size:16px">Наблюдение</div></div>
+      <div class="card"><div class="note">Открыто</div><div class="k num">0</div></div>
+      <div class="card"><div class="note">Сегодня</div><div class="k num">0</div></div>
+      <div class="card"><div class="note">P&L дня</div><div class="k num">0 ₽</div></div>
+    </div>
+    <div class="card" style="margin-bottom:10px">
+      <h2>Кривая песочницы и просадка</h2>
+      <svg class="plot" id="botEq" viewBox="0 0 760 160"></svg>
+      <div class="note">Линия чуть вниз — напоминание, что кривую нельзя рисовать растущей без журнала. На проекте точки берутся из сделок песочницы.</div>
+    </div>
+    <div class="card">
+      <table>
+        <tr><th>Стратегия</th><th>Сделок</th><th>Средний R</th><th></th></tr>
+        <tr><td>Возврат к VWAP</td><td class="num">из журнала</td><td class="num">из журнала</td><td><span class="pill">выкл, пока мало сделок</span></td></tr>
+        <tr><td>Пробой диапазона</td><td class="num">из журнала</td><td class="num">из журнала</td><td><span class="pill">выкл</span></td></tr>
+      </table>
+    </div>
+  </section>
+</main>
+
+<div class="shade" id="shade"></div>
+<aside class="drawer" id="drawer">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <b id="dTitle">SBER</b><button class="btn ghost" id="dClose">Закрыть</button>
+  </div>
+  <div class="sub" id="dSub">Карточка бумаги</div>
+  <div class="card" style="margin-top:12px">
+    <h2>Сейчас</h2>
+    <div class="row"><span>Цена</span><span class="num" id="dPx">—</span></div>
+    <div class="row"><span>В портфеле</span><span id="dPos">нет данных макета</span></div>
+    <div class="row"><span>Сигнал</span><span id="dSig">смотреть очередь</span></div>
+    <div class="row"><span>Свежесть</span><span>время источника</span></div>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:12px">
+    <button class="btn" id="dChart">Открыть график</button>
+  </div>
+  <div class="note" style="margin-top:12px">Агентов и лимиты токенов в эту панель не класть. Они в «Настройках».</div>
+</aside>
+<aside class="drawer" id="set">
+  <div style="display:flex;justify-content:space-between"><b>Настройки</b><button class="btn ghost" id="setClose">Закрыть</button></div>
+  <div class="card" style="margin-top:12px">
+    <h2>Вид</h2>
+    <div class="note">Переключатели «Тема» и «График», которые ни к чему не подключены, убрать. Тема одна, тёмная.</div>
+  </div>
+  <div class="card" style="margin-top:10px">
+    <h2>Агенты</h2>
+    <div class="row"><span>Lite, вызовов в день</span><span class="num">10</span></div>
+    <div class="row"><span>Pro, вызовов в день</span><span class="num">4</span></div>
+    <div class="note">ИИ только по кнопке, после того как код собрал факт.</div>
+  </div>
+</aside>
+
+<script>
+var names = {today:"Сегодня", chart:"График", signals:"Сигналы", volume:"Объёмы", bot:"Бот", portfolio:"Портфель", calc:"Расчёты", instruments:"Инструменты", reporting:"Отчётность"};
+var quotes = {
+  SBER:{px:"318,40", ch:"+0,42%", up:true, pos:"долгосрочный, 100 шт"},
+  GAZP:{px:"118,20", ch:"−0,30%", up:false, pos:"нет в образце"},
+  LKOH:{px:"6 420", ch:"+0,80%", up:true, pos:"нет в образце"},
+  FLOT:{px:"86,10", ch:"+", up:true, pos:"спекуляция, 200 шт"},
+  AFLT:{px:"—", ch:"+10,4%", up:true, pos:"сигнал"},
+  TATN:{px:"—", ch:"+0,5%", up:true, pos:"сигнал"},
+  IVAT:{px:"—", ch:"−5,9%", up:false, pos:"сигнал"}
+};
+function show(id){
+  document.querySelectorAll(".page").forEach(function(p){ p.classList.toggle("on", p.id===id); });
+  document.querySelectorAll("nav button").forEach(function(b){ b.classList.toggle("on", b.dataset.page===id); });
+}
+document.querySelectorAll("nav button").forEach(function(b){ b.onclick=function(){ show(b.dataset.page); }; });
+document.getElementById("q").onkeydown=function(e){
+  if(e.key!=="Enter") return;
+  var v=this.value.trim().toLowerCase();
+  Object.keys(names).forEach(function(id){ if(names[id].toLowerCase().indexOf(v)===0) show(id); });
+  var t=this.value.trim().toUpperCase();
+  if(quotes[t]) openDrawer(t);
+};
+function openDrawer(t){
+  var q=quotes[t]||{px:"—", ch:"", up:true, pos:"нет в образце"};
+  document.getElementById("dTitle").textContent=t;
+  document.getElementById("dPx").textContent=q.px+" "+q.ch;
+  document.getElementById("dPos").textContent=q.pos;
+  document.getElementById("dSig").textContent = (t==="FLOT"||t==="SBER") ? "есть в очереди" : "в очереди макета нет";
+  document.getElementById("drawer").classList.add("on");
+  document.getElementById("set").classList.remove("on");
+  document.getElementById("shade").classList.add("on");
+  document.getElementById("drawer").dataset.t=t;
+}
+function closeAll(){
+  document.getElementById("drawer").classList.remove("on");
+  document.getElementById("set").classList.remove("on");
+  document.getElementById("shade").classList.remove("on");
+}
+document.getElementById("shade").onclick=closeAll;
+document.getElementById("dClose").onclick=closeAll;
+document.getElementById("setClose").onclick=closeAll;
+document.getElementById("openSet").onclick=function(){
+  document.getElementById("set").classList.add("on");
+  document.getElementById("drawer").classList.remove("on");
+  document.getElementById("shade").classList.add("on");
+};
+document.getElementById("botSet").onclick=function(){
+  document.getElementById("set").classList.add("on");
+  document.getElementById("shade").classList.add("on");
+};
+document.getElementById("dChart").onclick=function(){
+  var t=document.getElementById("drawer").dataset.t||"SBER";
+  document.getElementById("sym").textContent=t;
+  var q=quotes[t];
+  if(q) document.getElementById("px").innerHTML=q.px+' <span style="font-size:14px">'+(q.ch||"")+"</span>";
+  closeAll(); show("chart");
+};
+document.querySelectorAll("[data-ticker]").forEach(function(el){
+  el.onclick=function(){ openDrawer(el.dataset.ticker); };
+});
+
+function ns(n,a){ var e=document.createElementNS("http://www.w3.org/2000/svg",n); Object.keys(a).forEach(function(k){ e.setAttribute(k,a[k]); }); return e; }
+function lineChart(svg, series, colors, h){
+  var w=760, pad=16;
+  for(var g=0;g<4;g++) svg.appendChild(ns("line",{x1:pad,x2:w-pad,y1:20+g*30,y2:20+g*30,stroke:"rgba(226,232,240,.08)"}));
+  series.forEach(function(arr,si){
+    var min=Math.min.apply(null,arr), max=Math.max.apply(null,arr);
+    var pts=arr.map(function(v,i){
+      var x=pad+(i/(arr.length-1))*(w-pad*2);
+      var y=16+(1-(v-min)/(max-min||1))*(h-40);
+      return x.toFixed(1)+","+y.toFixed(1);
+    }).join(" ");
+    svg.appendChild(ns("polyline",{points:pts,fill:"none",stroke:colors[si],"stroke-width":"2"}));
+  });
+}
+lineChart(document.getElementById("dayCurve"), [[10,12,11,13,12,14,13,15,14,16],[10,11,11,12,12,12,13,13,13,14]], ["#f0b45a","#8eb4ff"], 160);
+lineChart(document.getElementById("eq"), [[20,22,21,24,23,26,25,28,27,30],[0,2,1,3,2,4,3,5,4,6]], ["#f0b45a","#f07167"], 180);
+lineChart(document.getElementById("botEq"), [[30,29,28,29,27,26,25,24,25,23]], ["#f0b45a"], 160);
+
+(function candles(){
+  var svg=document.getElementById("ux");
+  var raw=[62,64,61,63,60,58,55,57,52,49,47,50,46,44,48,45,43,41,44,47,46,50,53,51,55,58,57,60,63,61,64,66,65,68,70,69,72,74,73,76];
+  var bars=raw.map(function(c,i){ var o=i?raw[i-1]:c-1; return {o:o,h:Math.max(o,c)+1.3,l:Math.min(o,c)-1.3,c:c,v:18+(i*13)%28}; });
+  var W=860,H=400,L=8,R=58,T=12,volH=72, plotB=H-volH-8;
+  var min=Math.min.apply(null,bars.map(function(b){return b.l})), max=Math.max.apply(null,bars.map(function(b){return b.h}));
+  function y(v){ return T+(1-(v-min)/(max-min))*(plotB-T-8); }
+  function x(i){ return L+(i+0.5)*((W-L-R)/bars.length); }
+  for(var g=0;g<4;g++){ var gy=y(min+(max-min)*g/3); svg.appendChild(ns("line",{x1:L,x2:W-R,y1:gy,y2:gy,stroke:"rgba(226,232,240,.08)"})); }
+  var ma=bars.map(function(_,i){ var s=0,n=0; for(var k=Math.max(0,i-19);k<=i;k++){ s+=bars[k].c; n++; } return s/n; });
+  var cw=((W-L-R)/bars.length)*0.55;
+  bars.forEach(function(b,i){
+    var up=b.c>=b.o, col=up?"#3ddc97":"#f07167", xc=x(i);
+    svg.appendChild(ns("line",{x1:xc,x2:xc,y1:y(b.h),y2:y(b.l),stroke:col}));
+    var top=y(Math.max(b.o,b.c)), bot=y(Math.min(b.o,b.c));
+    svg.appendChild(ns("rect",{x:xc-cw/2,y:top,width:cw,height:Math.max(1,bot-top),fill:col}));
+    var vh=(b.v/46)*(volH-14);
+    svg.appendChild(ns("rect",{x:xc-cw/2,y:H-8-vh,width:cw,height:vh,fill:col,opacity:"0.85"}));
+  });
+  svg.appendChild(ns("polyline",{points:ma.map(function(v,i){return x(i).toFixed(1)+","+y(v).toFixed(1)}).join(" "),fill:"none",stroke:"#8eb4ff","stroke-width":"1.6"}));
+  var ly=y(bars[bars.length-1].c);
+  svg.appendChild(ns("line",{x1:L,x2:W-R,y1:ly,y2:ly,stroke:"#f0b45a","stroke-dasharray":"3 3"}));
+  svg.appendChild(ns("rect",{x:W-R+2,y:ly-9,width:52,height:18,rx:"3",fill:"#f0b45a"}));
+  var tag=ns("text",{x:W-R+6,y:ly+4,fill:"#1a1408","font-size":"11","font-family":"IBM Plex Mono,monospace"});
+  tag.textContent="318.40"; svg.appendChild(tag);
+})();
+
+(function book(){
+  var host=document.getElementById("book");
+  var asks=[["321.10",90],["320.95",70],["320.80",40],["320.65",55],["320.50",30]];
+  var bids=[["320.30",60],["320.15",80],["320.00",45],["319.85",35],["319.70",50]];
+  function row(px,w,side){
+    var d=document.createElement("div"); d.className="ln";
+    d.innerHTML='<span class="num">'+(side==="a"?px:"")+'</span><div class="bar '+(side==="a"?"ask":"bid")+'" style="width:'+w+'%"></div><span class="num">'+(side==="b"?px:"")+'</span>';
+    host.appendChild(d);
+  }
+  asks.slice().reverse().forEach(function(a){ row(a[0], a[1], "a"); });
+  var mid=document.createElement("div"); mid.className="ln"; mid.innerHTML='<span></span><b class="num" style="color:#f0b45a">318.40</b><span></span>'; host.appendChild(mid);
+  bids.forEach(function(b){ row(b[0], b[1], "b"); });
+  document.getElementById("spr").textContent="спред образец";
+  var s=document.getElementById("cumb");
+  s.appendChild(ns("polyline",{points:"10,40 50,36 90,30 130,28 160,20",fill:"none",stroke:"#3ddc97","stroke-width":"2"}));
+  s.appendChild(ns("polyline",{points:"160,20 190,26 230,24 270,18",fill:"none",stroke:"#f07167","stroke-width":"2"}));
+  var tape=document.getElementById("tape");
+  [["18:40","318.40","B"],["18:39","318.35","S"],["18:39","318.42","B"],["18:38","318.20","S"],["18:38","318.55","B"]].forEach(function(r){
+    var tr=document.createElement("tr");
+    tr.innerHTML="<td class='num'>"+r[0]+"</td><td class='num "+(r[2]==="B"?"up":"dn")+"'>"+r[1]+"</td><td>"+r[2]+"</td>";
+    tape.appendChild(tr);
+  });
+  var wl=document.getElementById("wl");
+  [["SBER","318,40","+0,42"],["GAZP","118,20","−0,30"],["LKOH","6420","+0,80"],["FLOT","86,10","+"],["IMOEX","2548","−0,08"]].forEach(function(r,i){
+    var b=document.createElement("button");
+    if(i===0) b.className="on";
+    b.innerHTML="<b>"+r[0]+"</b><span class='num'>"+r[1]+"</span><span class='num "+(r[2].indexOf("−")===0?"dn":"up")+"'>"+r[2]+"</span>";
+    b.onclick=function(){
+      wl.querySelectorAll("button").forEach(function(x){x.classList.remove("on")}); b.classList.add("on");
+      document.getElementById("sym").textContent=r[0];
+      document.getElementById("px").innerHTML=r[1]+" <span style='font-size:14px'>"+r[2]+"</span>";
+    };
+    wl.appendChild(b);
+  });
+})();
+(function heat(){
+  var h=document.getElementById("heat");
+  [0.2,0.35,0.5,0.8,0.45,0.3,0.55,0.9,0.4].forEach(function(v){
+    var i=document.createElement("i"); i.style.background="rgba(240,180,90,"+(0.15+v*0.7)+")"; h.appendChild(i);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Сегодня — четыре варианта</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0d1117; --card:#161b22; --elev:#1c2128; --line:#30363d; --text:#e6edf3; --dim:#8b949e; --acc:#d4a017; --green:#3fb950; --red:#f85149; --blue:#58a6ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:"IBM Plex Sans",sans-serif; font-size:14px; }
+  .num { font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; }
+  header { display:flex; align-items:center; gap:12px; padding:0 16px; height:52px; background:var(--card); border-bottom:1px solid var(--line); }
+  .logo { font-weight:700; }
+  .nav { display:flex; gap:4px; color:var(--dim); font-size:13px; }
+  .nav span { padding:8px 10px; }
+  .nav span.on { background:var(--elev); color:var(--text); border-radius:6px; }
+  .sp { flex:1; }
+  .pick { display:flex; gap:6px; padding:10px 16px; border-bottom:1px solid var(--line); background:#12161c; position:sticky; top:0; z-index:2; }
+  .pick button { background:var(--elev); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 12px; font:inherit; cursor:pointer; text-align:left; }
+  .pick button.on { border-color:var(--acc); color:var(--acc); }
+  .pick small { display:block; color:var(--dim); font-size:11px; }
+  .shell { display:flex; min-height:calc(100vh - 110px); }
+  .side, .right { width:230px; background:var(--card); padding:12px; }
+  .side { border-right:1px solid var(--line); }
+  .right { width:300px; border-left:1px solid var(--line); }
+  .center { flex:1; padding:16px; min-width:0; }
+  .panel { background:var(--elev); border:1px solid var(--line); border-radius:8px; padding:12px; margin-bottom:12px; }
+  h3 { margin:0 0 8px; font-size:12px; color:var(--dim); text-transform:uppercase; letter-spacing:.04em; }
+  .dim { color:var(--dim); font-size:12px; }
+  .up { color:var(--green); } .dn { color:var(--red); }
+  .kpis { display:grid; gap:8px; margin-bottom:12px; }
+  .k4 { grid-template-columns:repeat(4,1fr); } .k6 { grid-template-columns:repeat(6,1fr); }
+  .kpi { background:var(--elev); border:1px solid var(--line); border-radius:8px; padding:10px; }
+  .val { font-size:20px; font-weight:600; }
+  .pills { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+  .pill { font-size:11px; border:1px solid var(--line); border-radius:99px; padding:2px 8px; color:var(--dim); }
+  .pill.ok { color:var(--green); } .pill.warn { color:var(--acc); }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  td { padding:6px 4px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .chart { height:220px; border-radius:8px; background:
+    linear-gradient(180deg, transparent 40%, rgba(63,185,80,.18)),
+    repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,255,255,.04) 41px);
+    position:relative; overflow:hidden; }
+  .chart svg { width:100%; height:100%; display:block; }
+  .row { display:flex; justify-content:space-between; gap:8px; padding:6px 0; border-bottom:1px solid var(--line); }
+  .row:last-child { border:0; }
+  .page { display:none; } .page.on { display:block; }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:900px) { .k4,.k6,.two { grid-template-columns:1fr 1fr; } .side,.right { display:none; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Terminal</div>
+  <div class="nav"><span class="on">Сегодня</span><span>График</span><span>Сигналы</span><span>Объёмы</span><span>Портфель</span><span>Расчёты</span><span>Инструменты</span><span>Отчётность</span><span>Торговый бот</span></div>
+  <span class="sp"></span>
+</header>
+<div class="pick" id="pick">
+  <button class="on" data-v="a">1. Как сейчас<small>те же блоки, тот же порядок</small></button>
+  <button data-v="b">2. Утро<small>без большого графика индекса</small></button>
+  <button data-v="c">3. Индекс<small>график главный, списки под ним</small></button>
+  <button data-v="d">4. Две колонки<small>факты слева, действия справа</small></button>
+</div>
+<div class="shell">
+  <aside class="side">
+    <div class="panel"><h3>Режим рынка</h3><div style="font-weight:600;color:var(--green)">Нейтральный</div><div class="dim">IMOEX · SMA50 / SMA200</div></div>
+    <div class="panel"><h3>Избранное</h3>
+      <div class="row"><b>SBER</b><span class="up num">+0,42%</span></div>
+      <div class="row"><b>FLOT</b><span class="dim">в портфеле</span></div>
+      <div class="dim">Добавить тикер — как сейчас</div>
+    </div>
+  </aside>
+  <section class="center">
+    <div class="page on" id="a">
+      <div style="font-size:18px;font-weight:600">Сегодня</div>
+      <div class="dim" style="margin-bottom:8px">31.10.2026 · режим: нейтральный</div>
+      <div class="pills"><span class="pill ok">Config OK</span><span class="pill ok">Live</span><span class="pill warn">Скальпер: песочница</span><span class="pill">свежесть источников</span></div>
+      <div class="kpis k4">
+        <div class="kpi"><div class="val">—</div><div class="dim">Открыто позиций<br>долгосрочный / спекуляция</div></div>
+        <div class="kpi"><div class="val num">80,56</div><div class="dim">Курсы ЦБ, ₽<br>USD · EUR 89,66 · CNY 12,09</div></div>
+        <div class="kpi"><div class="val num dn">112,49</div><div class="dim">Нефть · газ 2,89</div></div>
+        <div class="kpi"><div class="val">—</div><div class="dim">Металлы, ₽/г</div></div>
+      </div>
+      <div class="kpis k4">
+        <div class="kpi"><div class="val">0 ₽</div><div class="dim">P&L дня, песочница</div></div>
+        <div class="kpi"><div class="val">0</div><div class="dim">Сделок сегодня</div></div>
+        <div class="kpi"><div class="val num">2 548</div><div class="dim dn">IMOEX −0,08%</div></div>
+        <div class="kpi"><div class="val" style="font-size:16px">—</div><div class="dim">Новостной фон</div></div>
+      </div>
+      <div class="panel"><h3>Индекс МосБиржи</h3><div class="chart" id="ch1"></div><div class="dim">1М · 3М · 6М · 1Г. Сейчас этот график занимает центр вкладки.</div></div>
+      <div class="panel"><h3>Требует внимания</h3><div class="dim">GAZP +14,7% · AFLT +10,4% · TATN +0,5% · IVAT −5,9%</div></div>
+      <div class="panel"><h3>Сводка</h3><div class="dim">Сформировано / отклонено / открыто. Блок сворачивается.</div></div>
+      <div class="panel"><h3>Топ отказов сегодня</h3><div class="dim">Пары «тикер + причина» из журнала отказов.</div></div>
+      <div class="panel"><h3>Новости</h3><div class="dim">Источник, время, заголовок, тикеры.</div></div>
+    </div>
+
+    <div class="page" id="b">
+      <div style="font-size:18px;font-weight:600">Сегодня</div>
+      <div class="dim">Утро. Индекс не занимает экран: одна строка, график открывается на вкладке «График».</div>
+      <div class="panel" style="display:flex;justify-content:space-between;align-items:center">
+        <div><b>IMOEX</b> <span class="num">2 548</span> <span class="dn">−0,08%</span><div class="dim">режим: нейтральный · свеча дневная</div></div>
+        <span class="pill">открыть график индекса</span>
+      </div>
+      <div class="kpis k6">
+        <div class="kpi"><div class="dim">Нефть</div><div class="val num dn">112,49</div></div>
+        <div class="kpi"><div class="dim">Газ</div><div class="val num">2,89</div></div>
+        <div class="kpi"><div class="dim">USD</div><div class="val num">80,56</div></div>
+        <div class="kpi"><div class="dim">EUR</div><div class="val num">89,66</div></div>
+        <div class="kpi"><div class="dim">CNY</div><div class="val num">12,09</div></div>
+        <div class="kpi"><div class="dim">P&L дня</div><div class="val">0 ₽</div></div>
+      </div>
+      <div class="two">
+        <div class="panel"><h3>Сделать</h3>
+          <div class="row"><span><b>GAZP</b><div class="dim">сигнал в плюсе</div></span><span class="up">+14,7%</span></div>
+          <div class="row"><span><b>AFLT</b></span><span class="up">+10,4%</span></div>
+          <div class="row"><span><b>TATN</b><div class="dim">можно фиксировать часть</div></span><span class="up">+0,5%</span></div>
+          <div class="row"><span><b>IVAT</b></span><span class="dn">−5,9%</span></div>
+        </div>
+        <div class="panel"><h3>Не вошло</h3>
+          <div class="row"><span>Отказы сегодня</span><span class="dim">свернуть</span></div>
+          <div class="row"><span>Сводка сигналов</span><span class="dim">свернуть</span></div>
+          <div class="row"><span>Металлы</span><span class="dim">строка, не карточка</span></div>
+          <div class="row"><span>Статус Config / Live</span><span class="dim">в настройки</span></div>
+        </div>
+      </div>
+      <div class="panel"><h3>Новости</h3><div class="dim">Сначала бумаги избранного и портфеля, ниже — рынок. Оценка по кнопке, как сейчас.</div></div>
+    </div>
+
+    <div class="page" id="c">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <div><div style="font-size:18px;font-weight:600">Индекс МосБиржи</div><div class="dim">нейтральный · SMA50 / SMA200</div></div>
+        <div class="val num">2 548 <span class="dn" style="font-size:14px">−0,08%</span></div>
+      </div>
+      <div class="chart" id="ch3" style="height:300px;margin:8px 0"></div>
+      <div class="dim" style="margin-bottom:10px">1М · 3М · 6М · 1Г · поддержка и сопротивление, как сейчас</div>
+      <div class="kpis k6">
+        <div class="kpi"><div class="dim">Нефть</div><b class="num dn">112,49</b></div>
+        <div class="kpi"><div class="dim">Газ</div><b class="num">2,89</b></div>
+        <div class="kpi"><div class="dim">USD</div><b class="num">80,56</b></div>
+        <div class="kpi"><div class="dim">EUR</div><b class="num">89,66</b></div>
+        <div class="kpi"><div class="dim">CNY</div><b class="num">12,09</b></div>
+        <div class="kpi"><div class="dim">P&L</div><b>0 ₽</b></div>
+      </div>
+      <div class="two">
+        <div class="panel"><h3>Требует внимания</h3><div class="dim">Четыре открытых сигнала с экрана 31.10. Правой колонки «Текущий сигнал» нет: она повторяет вкладку «Сигналы».</div></div>
+        <div class="panel"><h3>Новости</h3><div class="dim">Короткий список. Отказы и сводка — свёрнуты под новостями.</div></div>
+      </div>
+    </div>
+
+    <div class="page" id="d">
+      <div style="font-size:18px;font-weight:600;margin-bottom:8px">Сегодня</div>
+      <div class="two">
+        <div>
+          <div class="panel"><h3>Рынок</h3>
+            <div class="row"><span>Режим</span><b class="up">нейтральный</b></div>
+            <div class="row"><span>IMOEX</span><span class="num">2 548 <span class="dn">−0,08%</span></span></div>
+            <div class="chart" id="ch4" style="height:90px"></div>
+            <div class="row"><span>Нефть</span><span class="num dn">112,49</span></div>
+            <div class="row"><span>Газ</span><span class="num">2,89</span></div>
+            <div class="row"><span>USD / EUR / CNY</span><span class="num">80,56 · 89,66 · 12,09</span></div>
+            <div class="row"><span>Металлы</span><span class="dim">ряд проекта</span></div>
+          </div>
+          <div class="panel"><h3>Счёт</h3>
+            <div class="row"><span>P&L дня</span><b>0 ₽</b></div>
+            <div class="row"><span>Сделок бота</span><b>0</b></div>
+            <div class="row"><span>Позиции</span><span class="dim">долгосрок / спекуляция</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="panel"><h3>Сделать</h3>
+            <div class="row"><span>GAZP</span><span class="up">+14,7%</span></div>
+            <div class="row"><span>AFLT</span><span class="up">+10,4%</span></div>
+            <div class="row"><span>TATN</span><span class="up">+0,5%</span></div>
+            <div class="row"><span>IVAT</span><span class="dn">−5,9%</span></div>
+          </div>
+          <div class="panel"><h3>Новости</h3><div class="dim">Портфель и избранное сверху, рынок ниже.</div></div>
+          <div class="panel"><h3>Свернуть</h3><div class="dim">Сводка · топ отказов. Не на первом экране.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <aside class="right" id="right">
+    <div class="panel"><h3>Текущий сигнал</h3><div class="dim">Эта колонка есть только в варианте 1. В остальных она убрана: тот же список живёт на вкладке «Сигналы».</div><div style="margin-top:8px"><b>FLOT</b><div class="dim">вход 84,94 · цель 94,74 · стоп 81,02</div></div></div>
+    <div class="panel"><h3>Сигналы</h3><div class="dim">Короткий список справа, как в текущем коде.</div></div>
+  </aside>
+</div>
+<script>
+function line(id){
+  var box=document.getElementById(id); if(!box) return;
+  box.innerHTML='<svg viewBox="0 0 400 120" preserveAspectRatio="none"><polyline fill="none" stroke="#3fb950" stroke-width="2" points="0,80 40,76 80,84 120,70 160,74 200,60 240,66 280,50 320,55 360,40 400,44"/></svg>';
+}
+["ch1","ch3","ch4"].forEach(line);
+document.querySelectorAll("#pick button").forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll("#pick button").forEach(function(x){x.classList.remove("on")});
+    b.classList.add("on");
+    document.querySelectorAll(".page").forEach(function(p){p.classList.toggle("on", p.id===b.dataset.v)});
+    document.getElementById("right").style.display = b.dataset.v==="a" ? "" : "none";
+  };
+});
+</script>
+</body>
+</html>

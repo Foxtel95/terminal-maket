@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terminal — макет оформления</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --side: #101418;
+    --side-2: #171c22;
+    --side-line: #2a313a;
+    --side-text: #c9d0d8;
+    --side-dim: #8b95a3;
+    --bg: #f4f6f8;
+    --card: #fff;
+    --line: #e6e9ee;
+    --text: #1c2128;
+    --dim: #66707c;
+    --blue: #1d4f91;
+    --blue-2: #e8f0fa;
+    --up: #157347;
+    --up-bg: #e8f6ee;
+    --down: #c2413a;
+    --down-bg: #fdeceb;
+    --warn: #9a6700;
+    --warn-bg: #fff6dd;
+    --r: 10px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    display: flex;
+    min-height: 100vh;
+  }
+  .num { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  aside {
+    width: 248px; flex: none; background: var(--side); color: var(--side-text);
+    display: flex; flex-direction: column; min-height: 100vh;
+    border-right: 1px solid #000;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 16px 16px 12px; }
+  .mark {
+    width: 28px; height: 28px; border-radius: 7px; background: var(--blue);
+    display: grid; place-items: center; color: #fff; font-weight: 600; font-size: 13px;
+  }
+  .brand b { display: block; font-size: 14px; letter-spacing: .01em; }
+  .brand span { display: block; color: var(--side-dim); font-size: 11px; margin-top: 1px; }
+  .group { padding: 12px 12px 4px; color: var(--side-dim); font-size: 10px; letter-spacing: .12em; font-weight: 600; }
+  nav button {
+    width: 100%; text-align: left; background: transparent; border: 0; color: var(--side-text);
+    font: inherit; font-size: 13.5px; padding: 7px 10px; border-radius: 8px; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+  }
+  nav button:hover { background: var(--side-2); }
+  nav button.active { background: #243041; color: #fff; }
+  nav { padding: 0 8px; }
+  .side-foot { margin-top: auto; padding: 12px; border-top: 1px solid var(--side-line); display: flex; gap: 8px; align-items: center; }
+  .ava { width: 28px; height: 28px; border-radius: 50%; background: #31445f; display: grid; place-items: center; font-size: 11px; }
+  .side-foot small { color: var(--side-dim); display: block; font-size: 11px; }
+  main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .top {
+    height: 56px; background: #fff; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 12px; padding: 0 20px;
+  }
+  .search {
+    flex: 1; max-width: 420px; background: var(--bg); border: 1px solid var(--line);
+    border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 13px; color: var(--text);
+  }
+  .top .sp { flex: 1; }
+  .btn {
+    background: var(--blue); color: #fff; border: 0; border-radius: 8px;
+    padding: 7px 12px; font: inherit; font-size: 13px; cursor: pointer;
+  }
+  .icon {
+    width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--line);
+    background: #fff; cursor: pointer; color: var(--dim);
+  }
+  .page { display: none; padding: 18px 20px 32px; }
+  .page.on { display: block; }
+  .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 14px; }
+  h1 { font-size: 22px; font-weight: 600; margin: 0; }
+  .sub { color: var(--dim); font-size: 12.5px; margin-top: 3px; }
+  .kpis { display: flex; gap: 18px; }
+  .kpis div { text-align: right; }
+  .kpis b { display: block; font-size: 14px; }
+  .kpis span { color: var(--dim); font-size: 11px; }
+  .grid { display: grid; gap: 12px; }
+  .g4 { grid-template-columns: repeat(4, 1fr); }
+  .g2 { grid-template-columns: 1.4fr .8fr; }
+  .g3 { grid-template-columns: 1fr 1fr 1fr; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 14px 12px; }
+  .card h2 { margin: 0 0 10px; font-size: 13.5px; font-weight: 600; }
+  .stat { font-size: 22px; font-weight: 600; letter-spacing: -.02em; }
+  .delta { font-size: 12px; margin-top: 2px; }
+  .up { color: var(--up); } .down { color: var(--down); } .warn { color: var(--warn); }
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .pill { font-size: 11.5px; padding: 3px 8px; border-radius: 999px; background: #eef1f4; color: #3d4652; }
+  .pill.ok { background: var(--up-bg); color: var(--up); }
+  .pill.warn { background: var(--warn-bg); color: var(--warn); }
+  .pill.bad { background: var(--down-bg); color: var(--down); }
+  .pill.long { background: var(--up-bg); color: var(--up); }
+  .pill.short { background: var(--down-bg); color: var(--down); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-size: 11px; letter-spacing: .04em; color: var(--dim); font-weight: 500; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  td { padding: 8px; border-bottom: 1px solid #f0f2f5; vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  .tabs { display: flex; gap: 4px; background: #eef1f4; padding: 3px; border-radius: 8px; width: fit-content; }
+  .tabs button { border: 0; background: transparent; font: inherit; font-size: 12.5px; padding: 5px 10px; border-radius: 6px; cursor: pointer; color: var(--dim); }
+  .tabs button.on { background: #fff; color: var(--text); box-shadow: 0 1px 2px rgba(16,20,24,.06); }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid #f0f2f5; font-size: 13px; }
+  .row:last-child { border-bottom: 0; }
+  .note { font-size: 12px; color: var(--dim); line-height: 1.45; }
+  .banner { font-size: 12px; color: var(--dim); background: #fff; border: 1px dashed var(--line); border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; }
+  .chart {
+    background: #0c0e12; border-radius: 8px; height: 280px; position: relative; overflow: hidden; color: #9aa3ad;
+  }
+  .chart svg { width: 100%; height: 100%; display: block; }
+  .filters { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 10px 0; font-size: 12.5px; color: var(--dim); }
+  select, .inp {
+    font: inherit; font-size: 12.5px; border: 1px solid var(--line); background: #fff;
+    border-radius: 7px; padding: 5px 8px; color: var(--text);
+  }
+  .sig { display: grid; grid-template-columns: 92px 1fr auto; gap: 12px; align-items: start; }
+  .score { font-size: 28px; font-weight: 600; color: var(--blue); }
+  .hide { display: none; }
+  @media (max-width: 1100px) {
+    .g4, .g3, .g2 { grid-template-columns: 1fr 1fr; }
+    .kpis { display: none; }
+  }
+  @media (max-width: 800px) {
+    aside { display: none; }
+    .g4, .g3, .g2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<aside>
+  <div class="brand"><div class="mark">T</div><div><b>Terminal</b><span>Макет оформления</span></div></div>
+  <div class="group">ОБЗОР</div>
+  <nav>
+    <button class="active" data-page="today">Сегодня</button>
+    <button data-page="chart">График</button>
+  </nav>
+  <div class="group">ТОРГОВЛЯ</div>
+  <nav>
+    <button data-page="signals">Сигналы</button>
+    <button data-page="volume">Объёмы</button>
+    <button data-page="bot">Торговый бот</button>
+  </nav>
+  <div class="group">СЧЁТ</div>
+  <nav>
+    <button data-page="portfolio">Портфель</button>
+    <button data-page="calc">Расчёты</button>
+  </nav>
+  <div class="group">ДАННЫЕ</div>
+  <nav>
+    <button data-page="instruments">Инструменты</button>
+    <button data-page="reporting">Отчётность</button>
+  </nav>
+  <div class="group">СИСТЕМА</div>
+  <nav>
+    <button data-page="agents">ИИ-агенты</button>
+    <button data-page="settings">Настройки</button>
+  </nav>
+  <div class="side-foot"><div class="ava">ВФ</div><div><b style="font-size:13px">Владелец</b><small>личный терминал</small></div></div>
+</aside>
+<main>
+  <div class="top">
+    <input class="search" placeholder="Тикер или раздел" id="q">
+    <span class="sp"></span>
+    <button class="icon" title="Уведомления" id="bell">•</button>
+    <button class="btn" id="act">Обновить</button>
+  </div>
+
+  <section class="page on" id="today">
+    <div class="banner">Макет. Разделы те же, что в терминале. Цифры с экрана 31.10.2026, это не живые котировки.</div>
+    <div class="head">
+      <div><h1>Сегодня</h1><div class="sub">31.10.2026 · 19:03 · режим: нейтральный</div></div>
+      <div class="kpis">
+        <div><b class="num">2 548</b><span>IMOEX</span></div>
+        <div><b class="num down">−0,08%</b><span>день</span></div>
+        <div><b class="num">10</b><span>открытых позиций</span></div>
+      </div>
+    </div>
+    <div class="pills">
+      <span class="pill ok">Config OK</span>
+      <span class="pill ok">Live · 64 тикера</span>
+      <span class="pill ok">Режим: нейтральный</span>
+      <span class="pill ok">ISS, свеча 30.10 · 258 тикеров</span>
+      <span class="pill warn">Скальпер: песочница</span>
+      <span class="pill warn">Устарели: FutOI, сводка «Сегодня»</span>
+    </div>
+    <div class="grid g4" style="margin-bottom:12px">
+      <div class="card"><div class="note">Открыто позиций</div><div class="stat num">10</div><div class="delta">Долгосрочный 8 · Спекуляция 2</div></div>
+      <div class="card"><div class="note">Курсы ЦБ, ₽</div><div class="delta down num">USD 80,56 · −0,1%</div><div class="delta down num">EUR 89,66 · −0,2%</div><div class="delta up num">CNY 12,09 · +0,0%</div></div>
+      <div class="card"><div class="note">Нефть · газ</div><div class="delta down num">Нефть 112,49 · −1,1%</div><div class="delta down num">Газ 2,89 · −0,5%</div><div class="note">фьючерс BR-12.26</div></div>
+      <div class="card"><div class="note">Режим рынка</div><div class="stat" style="font-size:18px;color:#9a6700">нейтральный</div><div class="note">IMOEX · SMA50 / SMA200</div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card">
+        <h2>Требует внимания</h2>
+        <div class="row"><div><b>TATN</b><div class="note">Открытый сигнал в плюсе: можно зафиксировать часть</div></div><div class="up num">+0,5%</div></div>
+        <div class="row"><div><b>AFLT</b><div class="note">Открытый сигнал в плюсе</div></div><div class="up num">+10,4%</div></div>
+        <div class="row"><div><b>GAZP</b><div class="note">Открытый сигнал в плюсе</div></div><div class="up num">+14,7%</div></div>
+        <div class="row"><div><b>IVAT</b><div class="note">Открытый сигнал в минусе</div></div><div class="down num">−5,9%</div></div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:12px">
+          <h2>Избранное</h2>
+          <div class="row"><span>IMOEX</span><span class="down num">−0,08%</span></div>
+          <div class="row"><span>SBER</span><span class="up num">+0,4%</span></div>
+          <div class="filters" style="margin:8px 0 0"><input class="inp" placeholder="Тикер" style="flex:1"><button class="btn">Добавить</button></div>
+          <div class="note" style="margin-top:8px">Новости по избранному приходят в «Важное» с меткой «Избранное».</div>
+        </div>
+        <div class="card">
+          <h2>Сводка</h2>
+          <div class="note">Watcher · Smart Money. Блок по-прежнему раскрываемый, здесь показан свёрнутый вид.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" id="chart">
+    <div class="head"><div><h1>График</h1><div class="sub">Тёмный график внутри светлой оболочки</div></div></div>
+    <div class="filters">
+      <input class="inp" value="SBER" style="width:100px">
+      <label><input type="checkbox"> SMA 20/50/200</label>
+      <div class="tabs" data-switch="tf"><button>1м</button><button>10м</button><button>1ч</button><button class="on">День</button><button>Неделя</button></div>
+      <button class="icon" style="width:auto;padding:0 10px">Разобрать уровни</button>
+    </div>
+    <div class="filters">
+      <span class="pill">RSI</span><span class="pill">MACD</span><span class="pill">VWAP</span><span class="pill">Объём</span>
+    </div>
+    <div class="card" style="padding:8px;background:#0c0e12;border-color:#1c2128">
+      <div style="display:flex;justify-content:space-between;color:#9aa3ad;font-size:12px;padding:6px 8px">
+        <span>SBER · день · SMA 20</span><span class="num" style="color:#3ddc97">318,40 · +0,42%</span>
+      </div>
+      <div class="chart">
+        <svg viewBox="0 0 800 280" preserveAspectRatio="none">
+          <g stroke="#232830" stroke-width="1">
+            <line x1="0" y1="40" x2="800" y2="40"/><line x1="0" y1="110" x2="800" y2="110"/>
+            <line x1="0" y1="180" x2="800" y2="180"/><line x1="0" y1="240" x2="800" y2="240"/>
+          </g>
+          <polyline fill="none" stroke="#6f8fbf" stroke-width="1.5" points="20,190 70,180 120,170 170,175 220,150 270,140 320,155 370,130 420,120 470,128 520,100 570,110 620,90 670,95 740,70"/>
+          <g>
+            <rect x="40" y="150" width="10" height="40" fill="#f07167"/><rect x="90" y="140" width="10" height="36" fill="#3ddc97"/>
+            <rect x="140" y="155" width="10" height="28" fill="#f07167"/><rect x="190" y="130" width="10" height="40" fill="#3ddc97"/>
+            <rect x="240" y="120" width="10" height="32" fill="#3ddc97"/><rect x="290" y="135" width="10" height="30" fill="#f07167"/>
+            <rect x="340" y="110" width="10" height="36" fill="#3ddc97"/><rect x="390" y="100" width="10" height="28" fill="#3ddc97"/>
+            <rect x="440" y="112" width="10" height="24" fill="#f07167"/><rect x="490" y="88" width="10" height="34" fill="#3ddc97"/>
+            <rect x="540" y="96" width="10" height="22" fill="#f07167"/><rect x="590" y="78" width="10" height="30" fill="#3ddc97"/>
+            <rect x="640" y="84" width="10" height="18" fill="#f07167"/><rect x="700" y="60" width="10" height="28" fill="#3ddc97"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">Состояние индикаторов</h2><button class="icon" style="width:auto;padding:0 10px">Разобрать</button></div>
+      <table>
+        <tr><th>Индикатор</th><th>Значение</th><th>Состояние</th></tr>
+        <tr><td>RSI 14</td><td class="num">54</td><td>нейтрально</td></tr>
+        <tr><td>Цена и VWAP</td><td class="num">выше</td><td class="up">покупки</td></tr>
+        <tr><td>SMA 50 / 200</td><td class="num">выше обеих</td><td class="up">дневной тренд вверх</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section class="page" id="signals">
+    <div class="head">
+      <div><h1>Сигналы</h1><div class="sub">Свои, Финам, почти сигналы</div></div>
+    </div>
+    <div class="tabs" data-switch="sig" style="margin-bottom:10px">
+      <button class="on" data-t="own">Сигналы</button>
+      <button data-t="finam">Сигналы Финам</button>
+      <button data-t="near">Почти сигналы</button>
+    </div>
+    <div data-pane="own">
+      <div class="filters">
+        <div class="tabs"><button class="on">Новые</button><button>Старые</button><button>Все</button></div>
+        <div class="tabs"><button class="on">Лонг</button><button>Шорт</button></div>
+        <input class="inp" placeholder="Поиск по тикеру">
+        <span>Балл от <select><option>0</option><option>60</option></select></span>
+      </div>
+      <div class="card" style="margin-bottom:10px">
+        <div class="sig">
+          <div><div class="score num">73</div><div class="note">балл</div></div>
+          <div><b>FLOT · лонг · спекуляция</b><div class="note">Вход 84,94 · цель 94,74 · стоп 81,02</div><div class="note">Срок в карточке сигнала, кнопки Принять / Отклонить остаются.</div></div>
+          <span class="pill long">лонг</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sig">
+          <div><div class="score num">68</div><div class="note">балл</div></div>
+          <div><b>SBER · лонг · долгосрочный</b><div class="note">Вход 318,40 · цель 345,00 · стоп 305,00</div></div>
+          <span class="pill long">лонг</span>
+        </div>
+      </div>
+    </div>
+    <div data-pane="finam" class="hide">
+      <div class="filters"><button class="btn">+ Добавить сигнал</button></div>
+      <div class="card note">Сигналов Финама в этом макете нет. Кнопка добавления на своём месте.</div>
+    </div>
+    <div data-pane="near" class="hide">
+      <div class="card"><b>LKOH</b><div class="note">Не прошёл отбор: нет закрепления над уровнем. Причина отказа остаётся в карточке.</div></div>
+    </div>
+  </section>
+
+  <section class="page" id="volume">
+    <div class="head"><div><h1>Объёмы</h1><div class="sub">По дням, по часам, три вопроса</div></div>
+      <div class="tabs"><button class="on">По дням</button><button>По часам</button><button>Три вопроса</button></div>
+    </div>
+    <div class="filters">
+      <span class="pill">Только success ≥ 25%</span>
+      <span class="pill">Spring или Absorption</span>
+      <span>Оценка <select><option>любая</option><option>высокая</option></select></span>
+      <span>Ликвидность <select><option>все</option><option>только ликвидные</option></select></span>
+    </div>
+    <div class="card">
+      <table>
+        <tr><th>Тикер</th><th>Оценка</th><th>Объём к среднему</th><th>Оборот</th><th>Сигнал</th></tr>
+        <tr><td><b>SBER</b></td><td>высокая</td><td class="num">2,4×</td><td class="num">12,8 млрд</td><td class="up">есть</td></tr>
+        <tr><td><b>GAZP</b></td><td>средняя</td><td class="num">1,6×</td><td class="num">8,1 млрд</td><td>нет</td></tr>
+        <tr><td><b>LKOH</b></td><td>высокая</td><td class="num">3,1×</td><td class="num">9,4 млрд</td><td class="up">есть</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section class="page" id="portfolio">
+    <div class="head"><div><h1>Портфель</h1><div class="sub">Стоимость, распределение, позиции, дивиденды</div></div></div>
+    <div class="grid g4" style="margin-bottom:12px;grid-template-columns:repeat(5,1fr)">
+      <div class="card"><div class="note">Всего средств</div><div class="stat num" style="font-size:18px">—</div></div>
+      <div class="card"><div class="note">P&L</div><div class="stat up num" style="font-size:18px">—</div></div>
+      <div class="card"><div class="note">P&L дня</div><div class="stat num" style="font-size:18px">—</div></div>
+      <div class="card"><div class="note">Кэш</div><div class="stat num" style="font-size:18px">—</div></div>
+      <div class="card"><div class="note">IMOEX за день</div><div class="stat down num" style="font-size:18px">−0,08%</div></div>
+    </div>
+    <div class="grid g2" style="margin-bottom:12px">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between"><h2>Динамика стоимости</h2><div class="tabs"><button class="on">1Д</button><button>1Н</button><button>1М</button><button>YTD</button></div></div>
+        <div class="chart" style="height:160px"><svg viewBox="0 0 600 140"><polyline fill="none" stroke="#1d4f91" stroke-width="2" points="0,90 80,80 160,88 240,70 320,74 400,60 500,55 590,48"/><polyline fill="none" stroke="#9a6700" stroke-width="2" points="0,100 80,92 160,95 240,84 320,80 400,78 500,70 590,66"/></svg></div>
+        <div class="note"><span class="up">■</span> портфель · <span style="color:#9a6700">■</span> IMOEX</div>
+      </div>
+      <div class="card">
+        <h2>Распределение</h2>
+        <div class="row"><span>Акции</span><span class="num">—</span></div>
+        <div class="row"><span>Облигации</span><span class="num">—</span></div>
+        <div class="row"><span>Кэш</span><span class="num">—</span></div>
+        <div class="note">Долгосрочный и спекуляция — отдельные суммы, как в текущем портфеле.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h2 style="margin:0">Позиции</h2><div class="tabs"><button class="on">Все</button><button>Долгосрочный</button><button>Спекуляция</button></div></div>
+      <table>
+        <tr><th>Тикер</th><th>Тип</th><th>Портфель</th><th>Кол-во</th><th>Средняя</th><th>Текущая</th><th>Доля</th><th>P&L</th></tr>
+        <tr><td><b>SBER</b></td><td>акция</td><td>долгосрочный</td><td class="num">100</td><td class="num">250,00</td><td class="num">318,40</td><td class="num">—</td><td class="up num">+</td></tr>
+        <tr><td><b>FLOT</b></td><td>акция</td><td>спекуляция</td><td class="num">200</td><td class="num">84,94</td><td class="num">86,10</td><td class="num">—</td><td class="up num">+</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section class="page" id="calc">
+    <div class="head">
+      <div><h1>Расчёты</h1><div class="sub">Прибыль по позициям и усреднение</div></div>
+      <div class="tabs" data-switch="calc"><button class="on" data-t="p">Прибыль по позициям</button><button data-t="a">Усреднение</button></div>
+    </div>
+    <div data-pane="p" class="card">
+      <div class="filters">Комиссия, % <input class="inp" value="0,05" style="width:70px"> <button class="btn">Добавить строку</button></div>
+      <table>
+        <tr><th>Тикер</th><th>Кол-во</th><th>Вход</th><th>Выход</th><th>Прибыль</th></tr>
+        <tr><td><b>SBER</b></td><td class="num">100</td><td class="num">250,00</td><td class="num">318,40</td><td class="up num">+6 840 ₽</td></tr>
+      </table>
+    </div>
+    <div data-pane="a" class="hide card">
+      <div class="filters">Тикер <input class="inp" value="SBER" style="width:90px"> Докупить, шт <input class="inp" value="50" style="width:70px"> Цена <input class="inp" value="300" style="width:80px"></div>
+      <div class="note">Новая средняя считается на этой странице, как сейчас во вкладке «Усреднение».</div>
+    </div>
+  </section>
+
+  <section class="page" id="instruments">
+    <div class="head"><div><h1>Инструменты</h1><div class="sub">Акции, облигации, фонды, другое. Пять уровней — по клику на строку.</div></div></div>
+    <div class="tabs" style="margin-bottom:10px"><button class="on">Акции</button><button>Облигации</button><button>Фонды</button><button>Другое</button></div>
+    <div class="filters">Оборот от <select><option>любой</option><option>50 млн ₽</option></select> Сортировка <select><option>как есть</option><option>по обороту</option><option>по изменению</option></select></div>
+    <div class="card">
+      <table>
+        <tr><th>Тикер</th><th>Название</th><th>Цена</th><th>День</th><th>Оборот, млн ₽</th><th>Оценка</th></tr>
+        <tr><td><b>SBER</b></td><td>Сбербанк</td><td class="num">318,40</td><td class="up num">+0,42%</td><td class="num">12 800</td><td>по сектору</td></tr>
+        <tr><td><b>GAZP</b></td><td>Газпром</td><td class="num">118,20</td><td class="down num">−0,30%</td><td class="num">8 100</td><td>нет данных</td></tr>
+        <tr><td><b>LKOH</b></td><td>Лукойл</td><td class="num">6 420</td><td class="up num">+0,80%</td><td class="num">9 400</td><td>по сектору</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section class="page" id="reporting">
+    <div class="head"><div><h1>Отчётность</h1><div class="sub">4 квартала и 5 лет, дивиденды, факторы</div></div></div>
+    <div class="filters">
+      <input class="inp" value="SBER" style="width:100px">
+      <div class="tabs"><button class="on">Кварталы</button><button>Годы</button></div>
+      <div class="tabs"><button class="on">4</button><button>8</button><button>все</button></div>
+      <button class="icon" style="width:auto;padding:0 10px">Обновить</button>
+      <button class="icon" style="width:auto;padding:0 10px">Проверить парсер</button>
+    </div>
+    <div class="grid g4" style="margin-bottom:12px">
+      <div class="card"><div class="note">Выручка</div><div class="stat num" style="font-size:18px">—</div><div class="delta up">к прошлому кварталу</div></div>
+      <div class="card"><div class="note">Чистая прибыль</div><div class="stat num" style="font-size:18px">—</div></div>
+      <div class="card"><div class="note">FCF</div><div class="stat num" style="font-size:18px">—</div></div>
+      <div class="card"><div class="note">Див. доходность</div><div class="stat num" style="font-size:18px">—</div></div>
+    </div>
+    <div class="card">
+      <h2>Что изменилось</h2>
+      <div class="note">Короткий разбор квартала, дивидендная политика и внешние факторы остаются на этой вкладке. В макете цифры не подставлены, чтобы не выдумать отчёт.</div>
+    </div>
+  </section>
+
+  <section class="page" id="bot">
+    <div class="head">
+      <div><h1>Торговый бот</h1><div class="sub">Песочница</div></div>
+      <button class="icon" style="width:auto;padding:0 10px">Настройки бота</button>
+    </div>
+    <div class="grid g4" style="margin-bottom:12px">
+      <div class="card"><div class="note">Статус</div><div class="stat" style="font-size:16px;color:#9a6700">Наблюдение</div><div class="note">сделки без заявок</div></div>
+      <div class="card"><div class="note">Открыто</div><div class="stat num">0</div></div>
+      <div class="card"><div class="note">Сегодня</div><div class="stat num">0</div><div class="note">сделок</div></div>
+      <div class="card"><div class="note">P&L дня</div><div class="stat num">0 ₽</div></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between"><h2>Закрытые сделки</h2><div class="tabs"><button class="on">Сегодня</button><button>Вчера</button><button>Неделя</button><button>Все</button></div></div>
+      <table>
+        <tr><th>Дата</th><th>Тикер</th><th>Сторона</th><th>Стратегия</th><th>Причина</th><th>R</th><th>₽</th></tr>
+        <tr><td colspan="7" class="note">Сделок за период нет</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h2>Стратегии</h2>
+      <div class="note">Вкл и выкл показываются списком, как сейчас. Переключатели остаются в настройках бота.</div>
+    </div>
+  </section>
+
+  <section class="page" id="agents">
+    <div class="head"><div><h1>ИИ-агенты</h1><div class="sub">Было кнопкой в шапке. Раздел тот же.</div></div></div>
+    <div class="card">
+      <table>
+        <tr><th>Модель</th><th>Сегодня</th><th>Лимит</th><th>Токены за месяц</th></tr>
+        <tr><td>GigaChat Lite</td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr>
+        <tr><td>GigaChat Pro</td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section class="page" id="settings">
+    <div class="head"><div><h1>Настройки</h1><div class="sub">Было кнопкой в шапке. Раздел тот же.</div></div></div>
+    <div class="grid g2">
+      <div class="card"><h2>Лимиты токенов</h2><div class="row"><span>Lite, вызовов в день</span><span class="num">10</span></div><div class="row"><span>Pro, вызовов в день</span><span class="num">4</span></div></div>
+      <div class="card"><h2>Журнал вызовов</h2><div class="note">Список вызовов ИИ остаётся здесь. В макете пусто.</div></div>
+    </div>
+  </section>
+</main>
+<script>
+  var titles = {today:"Сегодня", chart:"График", signals:"Сигналы", volume:"Объёмы", portfolio:"Портфель", calc:"Расчёты", instruments:"Инструменты", reporting:"Отчётность", bot:"Торговый бот", agents:"ИИ-агенты", settings:"Настройки"};
+  document.querySelectorAll("aside button[data-page]").forEach(function (b) {
+    b.onclick = function () {
+      document.querySelectorAll("aside button[data-page]").forEach(function (x) { x.classList.remove("active"); });
+      b.classList.add("active");
+      document.querySelectorAll(".page").forEach(function (p) { p.classList.remove("on"); });
+      document.getElementById(b.dataset.page).classList.add("on");
+    };
+  });
+  document.querySelectorAll("[data-switch]").forEach(function (box) {
+    box.querySelectorAll("button").forEach(function (b) {
+      b.onclick = function () {
+        box.querySelectorAll("button").forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        var root = box.closest(".page");
+        if (!b.dataset.t) return;
+        root.querySelectorAll("[data-pane]").forEach(function (p) {
+          p.classList.toggle("hide", p.dataset.pane !== b.dataset.t);
+        });
+      };
+    });
+  });
+  document.getElementById("q").onkeydown = function (e) {
+    if (e.key !== "Enter") return;
+    var v = this.value.trim().toLowerCase();
+    Object.keys(titles).forEach(function (id) {
+      if (titles[id].toLowerCase().indexOf(v) === 0) {
+        document.querySelector('aside button[data-page="' + id + '"]').click();
+      }
+    });
+  };
+</script>
+</body>
+</html>

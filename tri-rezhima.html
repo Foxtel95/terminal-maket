@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terminal — три режима</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0b0d; --s:#10141a; --s2:#161b22; --s3:#1c232c;
+    --line:rgba(226,232,240,.1); --ink:#e9e6df; --dim:#a2a6ae; --mute:#6e7580;
+    --acc:#f0b45a; --acc2:rgba(240,180,90,.15);
+    --up:#3ddc97; --dn:#f07167; --ma:#8eb4ff;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:var(--bg); color:var(--ink); }
+  body { font-family:"IBM Plex Sans",sans-serif; min-height:100vh; }
+  .num { font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; }
+  header { display:flex; align-items:center; gap:14px; padding:0 16px; height:52px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--bg); z-index:5; }
+  .logo { font-weight:600; letter-spacing:.02em; }
+  .logo span { color:var(--mute); font-weight:400; font-size:12px; margin-left:6px; }
+  .modes { display:flex; gap:4px; background:var(--s2); padding:3px; border-radius:9px; border:1px solid var(--line); }
+  .modes button { border:0; background:transparent; color:var(--dim); font:inherit; font-size:13px; padding:6px 12px; border-radius:7px; cursor:pointer; }
+  .modes button.on { background:var(--acc); color:#1a1408; font-weight:600; }
+  .sp { flex:1; }
+  .pill { font-size:11px; padding:3px 8px; border-radius:99px; border:1px solid var(--line); color:var(--dim); }
+  .pill.warn { color:var(--acc); background:var(--acc2); }
+  .pill.bad { color:var(--dn); background:rgba(240,113,103,.12); }
+  .pill.ok { color:var(--up); background:rgba(61,220,151,.12); }
+  main { padding:14px 16px 32px; max-width:1280px; margin:0 auto; }
+  .page { display:none; } .page.on { display:block; }
+  h1 { font-size:18px; margin:0; } .sub { color:var(--mute); font-size:12px; margin-top:2px; }
+  .banner { font-size:12px; color:var(--dim); border:1px dashed var(--line); border-radius:8px; padding:8px 10px; margin:10px 0; }
+  .grid { display:grid; gap:10px; }
+  .g6 { grid-template-columns:repeat(6,1fr); }
+  .g2 { grid-template-columns:1.15fr .85fr; }
+  .card { background:var(--s); border:1px solid var(--line); border-radius:10px; padding:12px; }
+  .card h2 { margin:0 0 8px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
+  .src { color:var(--mute); font-size:11px; }
+  .k { font-size:18px; font-weight:600; }
+  .up { color:var(--up); } .dn { color:var(--dn); }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; font-size:10px; letter-spacing:.07em; color:var(--mute); padding:6px; border-bottom:1px solid var(--line); }
+  td { padding:7px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr.clk { cursor:pointer; } tr.clk:hover td { background:rgba(240,180,90,.05); }
+  .row { display:flex; justify-content:space-between; gap:8px; padding:6px 0; border-bottom:1px solid var(--line); font-size:13px; }
+  .row:last-child { border-bottom:0; }
+  .desk { display:grid; grid-template-columns:232px 1fr 268px; gap:10px; }
+  .box { background:#0c0e12; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .wl-h { padding:8px 10px; color:var(--mute); font-size:10px; letter-spacing:.12em; }
+  .wl button { width:100%; text-align:left; background:transparent; border:0; border-bottom:1px solid var(--line); color:inherit; font:inherit; padding:7px 10px; cursor:pointer; display:flex; justify-content:space-between; gap:8px; }
+  .wl button.on,.wl button:hover { background:#171d25; }
+  .grp { padding:8px 10px 2px; color:var(--acc); font-size:10px; letter-spacing:.12em; }
+  .px { font-size:26px; font-weight:600; }
+  svg.plot { width:100%; display:block; }
+  .note { color:var(--mute); font-size:12px; line-height:1.4; }
+  .depth .ln { display:grid; grid-template-columns:62px 1fr 34px; gap:4px; padding:1px 8px; font-size:11px; align-items:center; }
+  .bar { height:13px; border-radius:2px; }
+  .ask { background:rgba(240,113,103,.5); margin-left:auto; } .bid { background:rgba(61,220,151,.45); }
+  .footline { padding:8px 12px; border-top:1px solid var(--line); font-size:12px; display:flex; justify-content:space-between; gap:8px; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+  .tabs button { border:0; background:var(--s2); color:var(--dim); font:inherit; font-size:12px; padding:5px 10px; border-radius:7px; cursor:pointer; border:1px solid var(--line); }
+  .tabs button.on { background:var(--acc); color:#1a1408; border-color:transparent; }
+  .hide { display:none; }
+  @media (max-width:1000px) { .g6 { grid-template-columns:1fr 1fr 1fr; } .desk,.g2 { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Terminal <span>личный счёт · Мосбиржа</span></div>
+  <div class="modes" id="modes">
+    <button class="on" data-page="morning">Утро · до 10:00</button>
+    <button data-page="session">Сессия</button>
+    <button data-page="review">Разбор · после закрытия</button>
+  </div>
+  <span class="sp"></span>
+  <span class="pill warn">песочница, заявок нет</span>
+  <span class="pill">макет вида</span>
+</header>
+<main>
+  <section class="page on" id="morning">
+    <div class="head"><h1>Можно ли сегодня торговать</h1><div class="sub">Один экран. Устаревшее не показываем числом: пусто и время источника.</div></div>
+    <div class="banner">Режим IMOEX на экране 31.10.2026 был нейтральный. Сводка в проекте и так считается в 11:00 и 22:00. Здесь это утренний лист, не девять вкладок.</div>
+    <div class="grid g6">
+      <div class="card"><div class="src">IMOEX · ISS · свеча 30.10</div><div class="k num">2 548</div><div class="dn num">−0,08%</div></div>
+      <div class="card"><div class="src">Нефть · фьючерс BR</div><div class="k num dn">112,49</div><div class="dn num">−1,1%</div></div>
+      <div class="card"><div class="src">Газ · экран 31.10</div><div class="k num dn">2,89</div><div class="dn num">−0,5%</div></div>
+      <div class="card"><div class="src">USD · ЦБ</div><div class="k num">80,56</div><div class="dn num">−0,1%</div></div>
+      <div class="card"><div class="src">EUR · ЦБ</div><div class="k num">89,66</div><div class="dn num">−0,2%</div></div>
+      <div class="card"><div class="src">CNY · ЦБ</div><div class="k num">12,09</div><div class="num">0,0%</div></div>
+    </div>
+    <div class="grid g2" style="margin-top:10px">
+      <div class="card">
+        <h2>Ставка и неделя</h2>
+        <div class="row"><span>Ключевая ставка</span><b>нет числа в макете</b></div>
+        <div class="src">Источник: решение ЦБ. Дата заседания в материалах проекта: 23.10.2026. Следующее заседание в макет не подставлено.</div>
+        <div class="row"><span>Отсечки дивидендов на 7 дней</span><span class="src">пусто · календарь проекта</span></div>
+        <div class="row"><span>Отчётности на 7 дней</span><span class="src">пусто · календарь проекта</span></div>
+        <div class="note">Пустая строка с источником лучше вчерашней нефти без подписи.</div>
+      </div>
+      <div class="card">
+        <h2>Новости</h2>
+        <div class="row"><span>Портфель</span><span class="pill">только бумаги счёта</span></div>
+        <div class="row"><span>Рынок</span><span class="pill">весь рынок РФ</span></div>
+        <div class="note">Лента в макет не подключена. В проекте сюда попадают уже отобранные новости, не весь поток.</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:10px">
+      <h2>Открытые сигналы · деньги, не только проценты</h2>
+      <table>
+        <tr><th>Бумага</th><th>До цели</th><th>До стопа</th><th>Убыток, ₽</th><th>Свежесть</th></tr>
+        <tr class="clk" data-go="session" data-sym="GAZP"><td><b>GAZP</b><div class="src">лонг</div></td><td class="up">в плюсе +14,7%</td><td class="src">из карточки сигнала</td><td class="src">размер не задан</td><td class="src">экран 31.10</td></tr>
+        <tr class="clk" data-go="session" data-sym="AFLT"><td><b>AFLT</b></td><td class="up">+10,4%</td><td class="src">из карточки</td><td class="src">размер не задан</td><td class="src">экран 31.10</td></tr>
+        <tr class="clk" data-go="session" data-sym="TATN"><td><b>TATN</b></td><td class="up">+0,5%</td><td class="src">из карточки</td><td class="src">размер не задан</td><td class="src">экран 31.10</td></tr>
+        <tr class="clk" data-go="session" data-sym="IVAT"><td><b>IVAT</b></td><td class="dn">−5,9%</td><td class="src">из карточки</td><td class="src">размер не задан</td><td class="src">экран 31.10</td></tr>
+        <tr class="clk" data-go="session" data-sym="SBER"><td><b>SBER</b><div class="src">вход 318,40 · цель 345 · стоп 305</div></td><td class="num">+26,60</td><td class="num dn">−13,40</td><td class="num">1 340 ₽ при 100 шт из образца</td><td class="src">не ваш живой счёт</td></tr>
+        <tr class="clk" data-go="session" data-sym="FLOT"><td><b>FLOT</b><div class="src">84,94 → 94,74 / 81,02</div></td><td class="num">+9,80</td><td class="num dn">−3,92</td><td class="num">784 ₽ при 200 шт из образца</td><td class="src">образец размера</td></tr>
+      </table>
+      <div class="note" style="margin-top:8px">Рубли посчитаны только там, где в макете уже были и уровни, и количество. Остальные не дорисованы. Лонги одного сектора на этом экране стоят одной группой, а не десятком независимых идей. Нефть на утро −1,1%: нефтяные лонги читаются вместе с BR.</div>
+    </div>
+  </section>
+
+  <section class="page" id="session">
+    <div class="head"><h1>Одна бумага</h1><div class="sub">10:00–18:50 · цена, стакан и лента только по открытому тикеру</div></div>
+    <div class="desk">
+      <div class="box wl" id="wl">
+        <div class="grp">ПОРТФЕЛЬ</div>
+        <button class="on" data-sym="SBER"><b>SBER</b><span class="up num">+0,42%</span></button>
+        <button data-sym="FLOT"><b>FLOT</b><span class="up num">+</span></button>
+        <div class="grp">СИГНАЛЫ</div>
+        <button data-sym="GAZP"><b>GAZP</b><span class="up num">+14,7%</span></button>
+        <button data-sym="AFLT"><b>AFLT</b><span class="up num">+10,4%</span></button>
+        <button data-sym="TATN"><b>TATN</b><span class="up num">+0,5%</span></button>
+        <button data-sym="IVAT"><b>IVAT</b><span class="dn num">−5,9%</span></button>
+        <div class="grp">ИЗБРАННОЕ</div>
+        <button data-sym="LKOH"><b>LKOH</b><span class="up num">+0,80%</span></button>
+        <button data-sym="IMOEX"><b>IMOEX</b><span class="dn num">−0,08%</span></button>
+      </div>
+      <div class="box">
+        <div style="padding:10px 12px 0">
+          <div class="src">свечи проекта · объём · SMA 20 · уровни сигнала</div>
+          <div class="px num" id="px">SBER 318,40 <span class="up" style="font-size:14px">+0,42%</span></div>
+          <div class="chips">
+            <span class="pill ok">бар к среднему: ответ на графике</span>
+            <span class="pill">сторона бара: покупка / продажа</span>
+            <span class="pill warn">крупный игрок: только по этой бумаге</span>
+          </div>
+          <div class="chips">
+            <span class="pill">отсечка: нет даты</span>
+            <span class="pill">отчёт: нет даты</span>
+            <span class="pill">ЦБ: заседание 23.10.2026</span>
+          </div>
+        </div>
+        <svg class="plot" id="ux" viewBox="0 0 820 360"></svg>
+        <div class="footline">
+          <span id="pos">SBER в портфеле · долгосрочный · сигнал лонг открыт</span>
+          <span class="src">ISS / Algopack · время кадра на строке стакана</span>
+        </div>
+      </div>
+      <div>
+        <div class="box" style="margin-bottom:10px">
+          <div class="wl-h">СТАКАН 10 · источник ISS или Algopack · образец, не книга</div>
+          <div id="book" class="depth"></div>
+          <svg class="plot" id="cum" viewBox="0 0 260 64"></svg>
+        </div>
+        <div class="box">
+          <div class="wl-h">ЛЕНТА · источник сделок ISS · сторона только если она есть в ответе</div>
+          <table id="tape"></table>
+        </div>
+      </div>
+    </div>
+    <div class="note" style="margin-top:8px">Свечи, стакан и лента нарисованы, чтобы показать место. Это не торги SBER. Объём «больше обычного» и крупный игрок в бою берутся из уже существующего разбора объёма, а не из новой вкладки.</div>
+  </section>
+
+  <section class="page" id="review">
+    <div class="head" style="display:flex;justify-content:space-between;align-items:flex-end">
+      <div><h1>После закрытия</h1><div class="sub">Журнал решает, включать ли правило. Новые стратегии не добавляются, пока журнал в минусе.</div></div>
+      <div class="tabs" id="rev">
+        <button class="on" data-t="journal">Журнал</button>
+        <button data-t="trust">Стратегии</button>
+        <button data-t="rep">Отчётность</button>
+      </div>
+    </div>
+    <div id="journal">
+      <div class="banner">На выгрузке конца октября средний результат бота был отрицательный. Пока свежий журнал не пересчитан, включение стратегии закрыто. Заявки на биржу и так запрещены настройкой песочницы.</div>
+      <div class="card">
+        <h2>Сделки</h2>
+        <table>
+          <tr><th>Состояние</th><th>Бумага</th><th>Почему вышли</th><th>R</th><th>₽ после комиссии</th></tr>
+          <tr><td>открыто</td><td colspan="4" class="src">из журнала проекта, в макете строк нет</td></tr>
+          <tr><td>закрыто</td><td colspan="4" class="src">цель / стоп / время · сумма после комиссии · в макете не выдумано</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="trust" class="hide">
+      <div class="card">
+        <h2>Можно ли верить правилу</h2>
+        <table>
+          <tr><th>Стратегия</th><th>Сделок</th><th>Средний R</th><th>Дошли до цели</th><th></th></tr>
+          <tr><td>Возврат к VWAP</td><td class="src">журнал</td><td class="src">журнал</td><td class="src">журнал</td><td><span class="pill bad">выкл</span></td></tr>
+          <tr><td>Пробой диапазона</td><td class="src">журнал</td><td class="src">журнал</td><td class="src">журнал</td><td><span class="pill bad">выкл</span></td></tr>
+        </table>
+        <div class="note" style="margin-top:8px">Кнопка включения не рисуется, пока сделок мало или средний R не плюс после комиссии. Скальпер на двадцати правилах на этот экран не выносится.</div>
+      </div>
+    </div>
+    <div id="rep" class="hide">
+      <div class="card">
+        <h2>Разбор бумаги · не для сессии</h2>
+        <div class="row"><span>SBER · ближайший отчёт</span><span class="src">нет даты в макете</span></div>
+        <div class="row"><span>История кварталов</span><b>отчёта нет</b></div>
+        <div class="src">Дыры smart-lab не показываются нулями. T-Invest не подменяет квартальный ряд одной точкой. Обновление: раз в неделю и кнопка этого тикера.</div>
+        <table style="margin-top:8px">
+          <tr><th></th><th>−3</th><th>−2</th><th>−1</th><th>последний</th><th>к прошлому</th></tr>
+          <tr><td>Выручка</td><td class="src">нет</td><td class="src">нет</td><td class="src">нет</td><td class="src">нет</td><td>—</td></tr>
+          <tr><td>Прибыль</td><td class="src">нет</td><td class="src">нет</td><td class="src">нет</td><td class="src">нет</td><td>—</td></tr>
+        </table>
+        <div class="note" style="margin-top:8px">Оценка по мультипликаторам сектора остаётся справкой в списке бумаг, не поводом входа. ИИ днём нет: кнопка «разобрать» только когда код уже собрал факт.</div>
+      </div>
+    </div>
+  </section>
+</main>
+<script>
+document.querySelectorAll("#modes button").forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll("#modes button").forEach(function(x){x.classList.remove("on")});
+    b.classList.add("on");
+    document.querySelectorAll(".page").forEach(function(p){p.classList.toggle("on", p.id===b.dataset.page)});
+  };
+});
+document.querySelectorAll("[data-go]").forEach(function(tr){
+  tr.onclick=function(){
+    document.querySelector('#modes button[data-page="session"]').click();
+    var sym=tr.dataset.sym;
+    var btn=document.querySelector('#wl button[data-sym="'+sym+'"]');
+    if(btn) btn.click();
+  };
+});
+document.querySelectorAll("#rev button").forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll("#rev button").forEach(function(x){x.classList.remove("on")});
+    b.classList.add("on");
+    ["journal","trust","rep"].forEach(function(id){ document.getElementById(id).classList.toggle("hide", id!==b.dataset.t); });
+  };
+});
+var pos={
+  SBER:"SBER в портфеле · долгосрочный · сигнал лонг открыт",
+  FLOT:"FLOT в портфеле · спекуляция · сигнал в очереди",
+  GAZP:"GAZP · открытый сигнал в плюсе · позиции в образце нет",
+  AFLT:"AFLT · открытый сигнал · позиции в образце нет",
+  TATN:"TATN · открытый сигнал · позиции в образце нет",
+  IVAT:"IVAT · открытый сигнал в минусе · позиции в образце нет",
+  LKOH:"LKOH · избранное · вместе с нефтью BR, не отдельная ставка сектора",
+  IMOEX:"IMOEX · режим, не бумага"
+};
+document.querySelectorAll("#wl button").forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll("#wl button").forEach(function(x){x.classList.remove("on")});
+    b.classList.add("on");
+    document.getElementById("px").innerHTML=b.dataset.sym+" · список";
+    document.getElementById("pos").textContent=pos[b.dataset.sym]||"";
+  };
+});
+function ns(n,a){var e=document.createElementNS("http://www.w3.org/2000/svg",n); Object.keys(a).forEach(function(k){e.setAttribute(k,a[k]);}); return e;}
+(function(){
+  var svg=document.getElementById("ux");
+  var raw=[60,63,61,66,64,62,58,55,57,52,50,53,49,47,51,48,52,55,54,58,61,60,64,67,66,70,72,71,74,76];
+  var bars=raw.map(function(c,i){var o=i?raw[i-1]:c-1; return {o:o,h:Math.max(o,c)+1.2,l:Math.min(o,c)-1.2,c:c,v:16+(i*11)%26};});
+  var W=820,H=360,L=36,R=16,T=16,volH=70,pb=H-volH-16;
+  var min=Math.min.apply(null,bars.map(function(b){return b.l})), max=Math.max.apply(null,bars.map(function(b){return b.h}));
+  function y(v){return T+(1-(v-min)/(max-min))*(pb-T);}
+  function x(i){return L+(i+.5)*((W-L-R)/bars.length);}
+  [[305,"стоп"],[318.4,"вход"],[345,"цель"]].forEach(function(lv,idx){
+    var val=min+(max-min)*[0.22,0.55,0.82][idx];
+    var gy=y(val);
+    svg.appendChild(ns("line",{x1:L,x2:W-R,y1:gy,y2:gy,stroke:idx===0?"#f07167":idx===2?"#3ddc97":"#f0b45a","stroke-dasharray":"4 3"}));
+    var t=ns("text",{x:4,y:gy+3,fill:"#a2a6ae","font-size":"10","font-family":"IBM Plex Sans,sans-serif"});
+    t.textContent=lv[1]; svg.appendChild(t);
+  });
+  var cw=((W-L-R)/bars.length)*0.5;
+  bars.forEach(function(b,i){
+    var up=b.c>=b.o, col=up?"#3ddc97":"#f07167", xc=x(i);
+    svg.appendChild(ns("line",{x1:xc,x2:xc,y1:y(b.h),y2:y(b.l),stroke:col}));
+    var top=y(Math.max(b.o,b.c)), bot=y(Math.min(b.o,b.c));
+    svg.appendChild(ns("rect",{x:xc-cw/2,y:top,width:cw,height:Math.max(1,bot-top),fill:col}));
+    svg.appendChild(ns("rect",{x:xc-cw/2,y:H-12-(b.v/40)*(volH-16),width:cw,height:(b.v/40)*(volH-16),fill:col,opacity:".8"}));
+  });
+  var book=document.getElementById("book");
+  function add(px,w,side){
+    var d=document.createElement("div"); d.className="ln";
+    d.innerHTML='<span class="num">'+(side==="a"?px:"")+'</span><div class="bar '+(side==="a"?"ask":"bid")+'" style="width:'+w+'%"></div><span class="num">'+(side==="b"?px:"")+'</span>';
+    book.appendChild(d);
+  }
+  [["321.05",40],["320.90",70],["320.70",50],["320.55",30],["320.45",60]].reverse().forEach(function(a){add(a[0],a[1],"a")});
+  var m=document.createElement("div"); m.className="ln"; m.innerHTML='<span class="src">образец</span><b class="num" style="color:#f0b45a">318.40</b><span></span>'; book.appendChild(m);
+  [["320.30",55],["320.10",80],["319.90",35],["319.70",45],["319.50",25]].forEach(function(b){add(b[0],b[1],"b")});
+  var c=document.getElementById("cum");
+  c.appendChild(ns("polyline",{points:"8,40 40,36 80,28 120,24 140,18",fill:"none",stroke:"#3ddc97","stroke-width":"2"}));
+  c.appendChild(ns("polyline",{points:"140,18 180,22 230,16 252,20",fill:"none",stroke:"#f07167","stroke-width":"2"}));
+  var tape=document.getElementById("tape");
+  [["18:40","318.40","B"],["18:39","318.22","S"],["18:39","318.48","B"]].forEach(function(r){
+    var tr=document.createElement("tr");
+    tr.innerHTML="<td class='num src'>"+r[0]+"</td><td class='num "+(r[2]==="B"?"up":"dn")+"'>"+r[1]+"</td><td>"+r[2]+"</td>";
+    tape.appendChild(tr);
+  });
+  var cap=document.createElement("tr");
+  cap.innerHTML="<td colspan='3' class='src'>сторона B/S в бою только из поля сделки</td>";
+  tape.appendChild(cap);
+})();
+</script>
+</body>
+</html>

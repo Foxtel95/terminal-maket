@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>График — колонка и стакан</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0d1117; --card:#161b22; --elev:#1c2128; --line:#30363d; --text:#e6edf3; --dim:#8b949e; --acc:#d4a017; --green:#3fb950; --red:#f85149; --blue:#58a6ff; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--text); font-family:"IBM Plex Sans",system-ui,sans-serif; font-size:14px; }
+  .num { font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; }
+  body { display:flex; flex-direction:column; }
+  header { height:52px; display:flex; align-items:center; padding:0 16px; background:var(--card); border-bottom:1px solid var(--line); font-weight:700; }
+  .app { flex:1; display:flex; min-height:0; }
+  aside.side { width:232px; background:var(--card); border-right:1px solid var(--line); padding:10px; display:flex; flex-direction:column; }
+  .nb { display:flex; width:100%; text-align:left; background:transparent; border:0; border-left:3px solid transparent; color:var(--dim); padding:9px 10px; border-radius:6px; cursor:pointer; font:inherit; font-weight:500; }
+  .nb.on { background:var(--elev); color:var(--text); border-left-color:var(--acc); }
+  .nb:hover { color:var(--text); }
+  .sub { margin:2px 0 8px 8px; display:none; }
+  .sub.on { display:block; }
+  .sub label { display:flex; justify-content:space-between; gap:8px; font-size:12px; color:var(--dim); padding:4px 6px; cursor:pointer; }
+  .grow { flex:1; }
+  .desk { flex:1; display:grid; grid-template-columns:200px 1fr 268px; min-width:0; }
+  .list, .book { background:var(--card); overflow:auto; }
+  .list { border-right:1px solid var(--line); }
+  .book { border-left:1px solid var(--line); padding:10px; }
+  .search { margin:8px; width:calc(100% - 16px); background:var(--elev); border:1px solid var(--line); color:var(--text); border-radius:6px; padding:6px 8px; font:inherit; }
+  .row { display:flex; justify-content:space-between; padding:8px 10px; cursor:pointer; border-left:3px solid transparent; }
+  .row.on { background:var(--elev); border-left-color:var(--acc); }
+  .row:hover { background:var(--elev); }
+  .up { color:var(--green); } .dn { color:var(--red); }
+  .chart { display:flex; flex-direction:column; min-width:0; background:#0a0c10; }
+  .bar { display:flex; gap:6px; align-items:center; padding:8px 10px; border-bottom:1px solid var(--line); }
+  .chip { border:1px solid var(--line); background:transparent; color:var(--dim); border-radius:6px; padding:4px 8px; font:inherit; font-size:12px; cursor:pointer; }
+  .chip.on { background:var(--acc); color:#1a1408; border-color:transparent; font-weight:600; }
+  canvas { width:100%; flex:1; min-height:0; }
+  h3 { margin:0 0 8px; font-size:11px; letter-spacing:.08em; color:var(--dim); }
+  .ln { display:grid; grid-template-columns:64px 1fr 48px; gap:6px; align-items:center; margin:3px 0; cursor:pointer; }
+  .ln:hover { background:var(--elev); }
+  .gbar { height:10px; border-radius:2px; }
+  .ask { background:rgba(248,81,73,.75); justify-self:end; }
+  .bid { background:rgba(63,185,80,.7); }
+  .mean { margin-top:10px; color:var(--dim); font-size:12px; line-height:1.45; }
+  .tape { margin-top:10px; border-top:1px solid var(--line); padding-top:8px; }
+  .hint { color:var(--dim); font-size:12px; margin-left:auto; }
+</style>
+</head>
+<body>
+<header>Terminal</header>
+<div class="app">
+  <aside class="side">
+    <button class="nb">Сегодня</button>
+    <button class="nb on">График</button>
+    <button class="nb" id="btnInd">Индикаторы</button>
+    <div class="sub" id="indBox">
+      <label>SMA 20/50/200 <input type="checkbox" data-k="sma"></label>
+      <label>EMA 9/21 <input type="checkbox" data-k="ema"></label>
+      <label>Bollinger <input type="checkbox" data-k="bb"></label>
+      <label>Supertrend <input type="checkbox" data-k="st"></label>
+      <label>VWAP ±σ <input type="checkbox" data-k="vwap"></label>
+      <label>ATR <input type="checkbox" data-k="atr"></label>
+      <label>ADX/DMI <input type="checkbox" data-k="adx"></label>
+      <label>Stochastic <input type="checkbox" data-k="stoch"></label>
+      <label>OBV <input type="checkbox" data-k="obv"></label>
+    </div>
+    <button class="nb" id="btnLvl">Уровни</button>
+    <button class="nb">Сигналы</button>
+    <button class="nb">Объёмы</button>
+    <button class="nb">Портфель</button>
+    <button class="nb">Расчёты</button>
+    <button class="nb">Инструменты</button>
+    <button class="nb">Отчётность</button>
+    <button class="nb">Торговый бот</button>
+    <button class="nb">ИИ агенты</button>
+    <button class="nb">Избранное</button>
+    <div class="grow"></div>
+    <button class="nb">Настройки</button>
+  </aside>
+  <div class="desk">
+    <div class="list" id="list">
+      <input class="search" value="" placeholder="Тикер">
+    </div>
+    <div class="chart">
+      <div class="bar">
+        <b id="tk">VSEH</b>
+        <button class="chip" data-tf="1">1м</button>
+        <button class="chip" data-tf="10">10м</button>
+        <button class="chip" data-tf="60">1ч</button>
+        <button class="chip on" data-tf="D">День</button>
+        <button class="chip" data-tf="W">Неделя</button>
+        <span class="hint" id="ohlc">Макет, не биржа. Индикаторы и уровни выключены.</span>
+      </div>
+      <canvas id="c"></canvas>
+    </div>
+    <aside class="book" id="book"></aside>
+  </div>
+</div>
+<script>
+var names=[["VSEH","89.88","+0.46"],["SPBE","142.20","-0.30"],["CHMF","1180","+1.10"],["FLOT","84.90","+0.20"],["LKOH","7200","-0.40"],["NVTK","980","+0.15"],["FESH","62.40","-1.20"],["MDMG","980","+0.05"],["ROSN","520","-0.22"],["PRMD","310","+0.80"],["HHRU","4100","-0.90"]];
+var cur="VSEH";
+var on={}, levels=false;
+var bars=[];
+(function(){ var p=112; for(var i=0;i<80;i++){ var d=i<30?-0.55:(i<55?-0.05:0.12); var o=p,c=Math.max(70,p+d+Math.sin(i/3)*0.35); bars.push({o:o,h:Math.max(o,c)+0.25,l:Math.min(o,c)-0.25,c:c,v:10+(i*7)%18}); p=c; } })();
+function sma(n){ return bars.map(function(_,i){ if(i<n-1)return null; var s=0; for(var k=i-n+1;k<=i;k++)s+=bars[k].c; return s/n; }); }
+function ema(n){ var k=2/(n+1),e=null; return bars.map(function(b){ e=e==null?b.c:b.c*k+e*(1-k); return e; }); }
+var I={sma20:sma(20),sma50:sma(50),ema9:ema(9),ema21:ema(21)};
+function list(){
+  document.getElementById("list").innerHTML='<input class="search" placeholder="Тикер">'+names.map(function(n){
+    var cls=n[2][0]==="+"?"up":"dn";
+    return '<div class="row'+(n[0]===cur?' on':'')+'" data-t="'+n[0]+'"><b>'+n[0]+'</b><span class="num '+cls+'">'+n[1]+' '+n[2]+'%</span></div>';
+  }).join("");
+  document.querySelectorAll(".row").forEach(function(r){ r.onclick=function(){ cur=r.dataset.t; document.getElementById("tk").textContent=cur; list(); book(); }; });
+}
+function book(){
+  var asks=[["90.40",62],["90.15",40],["89.95",48],["89.88",28],["89.70",44]];
+  var bids=[["89.60",70],["89.40",84],["89.20",36],["89.00",50],["88.70",30]];
+  var h='<h3>СТАКАН · образец</h3>';
+  asks.slice().reverse().forEach(function(a){ h+='<div class="ln" data-p="'+a[0]+'"><span class="num dn">'+a[0]+'</span><span class="gbar ask" style="width:'+a[1]+'%"></span><span class="num">'+a[1]+'</span></div>'; });
+  h+='<div class="ln"><span></span><b class="num" style="color:var(--acc)">89.88</b><span class="num">спред 0.10</span></div>';
+  bids.forEach(function(b){ h+='<div class="ln" data-p="'+b[0]+'"><span class="num up">'+b[0]+'</span><span class="gbar bid" style="width:'+b[1]+'%"></span><span class="num">'+b[1]+'</span></div>'; });
+  h+='<div class="mean">Зелёные — заявки на покупку, красные — на продажу. Полоса — лоты. Клик по цене ставит на график одну линию и копирует число. Это не книга VSEH.</div>';
+  h+='<div class="mean">По образцу больше лотов на покупку у 89.40.</div>';
+  h+='<div class="tape"><h3>ЛЕНТА</h3><div class="num up">89.88 · 12</div><div class="num dn">89.70 · 40</div><div class="num up">89.80 · 8</div><div class="mean">Последние сделки. Источник в бою — T-Invest или ISS, со временем кадра.</div></div>';
+  document.getElementById("book").innerHTML=h;
+  document.querySelectorAll(".ln[data-p]").forEach(function(el){ el.onclick=function(){ window._line=parseFloat(el.dataset.p); draw(); }; });
+}
+function draw(){
+  var c=document.getElementById("c"), dpr=2, r=c.getBoundingClientRect();
+  c.width=r.width*dpr; c.height=r.height*dpr;
+  var ctx=c.getContext("2d"), w=c.width, h=c.height, L=8, R=64, B=h*0.18;
+  ctx.fillStyle="#0a0c10"; ctx.fillRect(0,0,w,h);
+  var min=1e9,max=-1e9; bars.forEach(function(b){ min=Math.min(min,b.l); max=Math.max(max,b.h); });
+  if(on.sma){ I.sma20.concat(I.sma50).forEach(function(v){ if(v){min=Math.min(min,v); max=Math.max(max,v);} }); }
+  if(on.ema){ I.ema9.concat(I.ema21).forEach(function(v){ min=Math.min(min,v); max=Math.max(max,v); }); }
+  var pad=(max-min)*0.08; min-=pad; max+=pad;
+  var y=function(v){ return 16+(1-(v-min)/(max-min))*(h-B-24); };
+  var x=function(i){ return L+(i+0.5)*((w-L-R)/bars.length); };
+  ctx.strokeStyle="#21262d"; for(var g=1;g<4;g++){ ctx.beginPath(); ctx.moveTo(0,g*(h-B)/4); ctx.lineTo(w-R,g*(h-B)/4); ctx.stroke(); }
+  var cw=Math.max(2,((w-L-R)/bars.length)*0.62), vmax=0; bars.forEach(function(b){ vmax=Math.max(vmax,b.v); });
+  bars.forEach(function(b,i){
+    var up=b.c>=b.o, col=up?"#3fb950":"#f85149", xc=x(i);
+    ctx.strokeStyle=col; ctx.beginPath(); ctx.moveTo(xc,y(b.h)); ctx.lineTo(xc,y(b.l)); ctx.stroke();
+    ctx.fillStyle=col; ctx.fillRect(xc-cw/2, y(Math.max(b.o,b.c)), cw, Math.max(1,y(Math.min(b.o,b.c))-y(Math.max(b.o,b.c))));
+    ctx.globalAlpha=.8; ctx.fillRect(xc-cw/2, h-6-(b.v/vmax)*(B-14), cw, (b.v/vmax)*(B-14)); ctx.globalAlpha=1;
+  });
+  function stroke(arr,color){ ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=1.6; var s=false; arr.forEach(function(v,i){ if(v==null)return; var px=x(i),py=y(v); if(!s){ctx.moveTo(px,py); s=true;} else ctx.lineTo(px,py); }); ctx.stroke(); }
+  if(on.sma){ stroke(I.sma20,"#58a6ff"); stroke(I.sma50,"#d4a017"); }
+  if(on.ema){ stroke(I.ema9,"#79c0ff"); stroke(I.ema21,"#d29922"); }
+  if(on.bb||on.st||on.vwap){ ctx.fillStyle="#8b949e"; ctx.font="22px sans-serif"; ctx.fillText("включён оверлей", 16, 36); }
+  if(levels){ [["92.43","#f85149","R"],["84.36","#3fb950","S"]].forEach(function(z){ ctx.setLineDash([6,4]); ctx.strokeStyle=z[1]; ctx.beginPath(); ctx.moveTo(0,y(+z[0])); ctx.lineTo(w-R,y(+z[0])); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle=z[1]; ctx.font="20px sans-serif"; ctx.fillText(z[2]+" "+z[0], w-R+4, y(+z[0])); }); }
+  if(window._line){ ctx.strokeStyle="#d4a017"; ctx.beginPath(); ctx.moveTo(0,y(window._line)); ctx.lineTo(w-R,y(window._line)); ctx.stroke(); }
+  var osc=["atr","adx","stoch","obv"].filter(function(k){return on[k];});
+  document.getElementById("ohlc").textContent = (Object.keys(on).some(function(k){return on[k];})||levels) ? "Макет. Линии только по кнопкам." : "Макет, не биржа. Индикаторы и уровни выключены.";
+  if(osc.length) document.getElementById("ohlc").textContent += " Осциллятор: "+osc.join(", ")+".";
+}
+document.getElementById("btnInd").onclick=function(){ document.getElementById("indBox").classList.toggle("on"); this.classList.toggle("on"); };
+document.getElementById("btnLvl").onclick=function(){ levels=!levels; this.classList.toggle("on", levels); draw(); };
+document.querySelectorAll("[data-k]").forEach(function(el){ el.onchange=function(){ on[el.dataset.k]=el.checked; draw(); }; });
+document.querySelectorAll("[data-tf]").forEach(function(b){ b.onclick=function(){ document.querySelectorAll("[data-tf]").forEach(function(x){x.classList.remove("on")}); b.classList.add("on"); }; });
+window.addEventListener("resize", draw);
+list(); book(); draw();
+</script>
+</body>
+</html>

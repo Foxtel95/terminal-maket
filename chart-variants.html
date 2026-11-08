@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>График — четыре варианта</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0d1117; --card:#161b22; --elev:#1c2128; --line:#30363d; --text:#e6edf3; --dim:#8b949e; --acc:#d4a017; --green:#3fb950; --red:#f85149; --blue:#58a6ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:"IBM Plex Sans",sans-serif; }
+  .num { font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; }
+  header { padding:12px 16px; border-bottom:1px solid var(--line); background:#12161c; position:sticky; top:0; z-index:2; }
+  h1 { margin:0 0 8px; font-size:16px; }
+  .pick { display:flex; gap:8px; flex-wrap:wrap; }
+  .pick button { background:var(--elev); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 12px; font:inherit; cursor:pointer; text-align:left; }
+  .pick button.on { border-color:var(--acc); color:var(--acc); }
+  .pick small { display:block; color:var(--dim); font-size:11px; }
+  main { padding:14px 16px 28px; }
+  .page { display:none; } .page.on { display:block; }
+  .bar { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:8px; font-size:12px; }
+  .chip { border:1px solid var(--line); border-radius:99px; padding:3px 8px; color:var(--dim); background:var(--card); }
+  .chip.on { background:var(--acc); color:#1a1408; border-color:transparent; font-weight:600; }
+  .note { color:var(--dim); font-size:12px; margin:6px 0 10px; }
+  .frame { background:#0a0c10; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  svg { width:100%; display:block; }
+  .desk { display:grid; grid-template-columns:1fr 220px; gap:10px; }
+  .side { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:10px; font-size:13px; }
+  .row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--line); }
+  .up { color:var(--green); } .dn { color:var(--red); }
+  .tag { font-size:11px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>График VSEH · четыре раскладки</h1>
+  <div class="pick" id="pick">
+    <button class="on" data-v="a">1. Как сейчас<small>все линии на одном окне</small></button>
+    <button data-v="b">2. Один оверлей<small>свечи, объём, два уровня</small></button>
+    <button data-v="c">3. Последние полгода<small>старое падение не сжимает цену</small></button>
+    <button data-v="d">4. Цифры справа<small>индикаторы текстом, не линиями</small></button>
+  </div>
+</header>
+<main>
+  <section class="page on" id="a">
+    <div class="bar">
+      <span class="chip">VSEH</span><span class="chip">SMA</span>
+      <span class="chip">1м</span><span class="chip">10м</span><span class="chip">1ч</span><span class="chip on">День</span><span class="chip">Неделя</span>
+      <span class="note" style="margin:0">VSEH · 89,88 (+0,46%) · RSI 84 · восходящий</span>
+    </div>
+    <div class="bar">
+      <span class="chip on">Сигналы (10)</span><span class="chip">Сигналы Финам (40)</span>
+      <span class="chip">SPBE</span><span class="chip">CHMF</span><span class="chip">FLOT</span><span class="chip">LKOH</span><span class="chip">NVTK</span><span class="chip">FESH</span><span class="chip">MDMG</span><span class="chip">ROSN</span><span class="chip">PRMD</span><span class="chip">HHRU</span>
+    </div>
+    <div class="bar">
+      <span class="chip on">Тренд</span><span class="chip">Внутри дня</span><span class="chip">Разворот</span>
+      <span class="chip on">EMA 9/21</span><span class="chip on">Bollinger</span><span class="chip on">Supertrend</span><span class="chip">VWAP</span><span class="chip">ATR</span><span class="chip on">ADX/DMI</span><span class="chip">Stochastic</span><span class="chip">OBV</span>
+    </div>
+    <div class="frame"><svg id="full" viewBox="0 0 900 320"></svg></div>
+    <div class="note">Так на скрине: пресет «Тренд» и ещё четыре индикатора сразу. Цена года живёт у верхней трети, потому что слева было 200.</div>
+  </section>
+
+  <section class="page" id="b">
+    <div class="bar">
+      <span class="chip">VSEH</span>
+      <span class="chip">1м</span><span class="chip">10м</span><span class="chip">1ч</span><span class="chip on">День</span><span class="chip">Неделя</span>
+      <span class="chip on">Чисто</span><span class="chip">Тренд</span><span class="chip">Внутри дня</span>
+    </div>
+    <div class="frame"><svg id="clean" viewBox="0 0 900 320"></svg></div>
+    <div class="note">На цене только свечи и два ближайших уровня. Объём своим рядом снизу. Supertrend, Боллинджер и EMA включаются по одному пресету, не вместе. ADX под графиком появляется только если пресет его требует.</div>
+  </section>
+
+  <section class="page" id="c">
+    <div class="bar">
+      <span class="chip">VSEH</span><span class="chip on">6 месяцев</span><span class="chip">1 год</span><span class="chip">Вся история</span>
+      <span class="note" style="margin:0">89,88 · до сопротивления 92,43 ещё 2,55 · до поддержки 84,36</span>
+    </div>
+    <div class="frame"><svg id="zoom" viewBox="0 0 900 320"></svg></div>
+    <div class="note">По умолчанию последние полгода. Падение со 160–200 не расплющивает текущие 84–92. Вся история остаётся кнопкой.</div>
+  </section>
+
+  <section class="page" id="d">
+    <div class="bar">
+      <span class="chip">VSEH</span><span class="chip on">День</span><span class="chip on">Чисто</span>
+    </div>
+    <div class="desk">
+      <div class="frame"><svg id="side" viewBox="0 0 680 340"></svg></div>
+      <aside class="side">
+        <div class="row"><span>Цена</span><b class="num">89,88</b></div>
+        <div class="row"><span>День</span><b class="up num">+0,46%</b></div>
+        <div class="row"><span>RSI 14</span><b class="num">84</b></div>
+        <div class="row"><span>ADX</span><b class="num">55</b></div>
+        <div class="row"><span>+DI / −DI</span><b class="num">35 / —</b></div>
+        <div class="row"><span>Сопротивление</span><b class="num dn">92,43 · ×6</b></div>
+        <div class="row"><span>Поддержка</span><b class="num up">84,36 · ×5</b></div>
+        <div class="row"><span>До сопротивления</span><b class="num">+2,55</b></div>
+        <div class="note">Линий EMA и Supertrend нет. Числа те же, что на скрине. Второе окно ADX не нужно.</div>
+      </aside>
+    </div>
+  </section>
+</main>
+<script>
+function svgEl(n,a){var e=document.createElementNS("http://www.w3.org/2000/svg",n); Object.keys(a).forEach(function(k){e.setAttribute(k,a[k]);}); return e;}
+var path="20,30 70,48 120,70 170,110 220,150 270,145 320,160 370,168 420,175 470,180 520,178 570,182 620,176 670,170 720,168 780,150 840,140 880,132";
+function grid(svg,w,h){
+  for(var i=1;i<4;i++) svg.appendChild(svgEl("line",{x1:0,x2:w,y1:i*h/4,y2:i*h/4,stroke:"#21262d"}));
+  for(var j=1;j<6;j++) svg.appendChild(svgEl("line",{y1:0,y2:h-40,x1:j*w/6,x2:j*w/6,stroke:"#21262d"}));
+}
+function candles(svg,y0,y1,n,w,top){
+  var cw=Math.max(3,(w-40)/n*0.55);
+  for(var i=0;i<n;i++){
+    var t=i/(n-1);
+    var base=y0+(y1-y0)*Math.min(1,t*1.15);
+    var noise=((i*37)%11)-5;
+    var o=base+noise, c=base+((i*19)%9)-4;
+    var x=24+t*(w-50);
+    var up=c<=o;
+    var col=up?"#3fb950":"#f85149";
+    svg.appendChild(svgEl("line",{x1:x,x2:x,y1:Math.min(o,c)-6,y2:Math.max(o,c)+6,stroke:col}));
+    svg.appendChild(svgEl("rect",{x:x-cw/2,y:Math.min(o,c),width:cw,height:Math.max(2,Math.abs(c-o)),fill:col}));
+  }
+}
+function vol(svg,w,h){
+  for(var i=0;i<48;i++){
+    var x=24+i*((w-50)/48), vh=6+((i*17)%18);
+    svg.appendChild(svgEl("rect",{x:x,y:h-8-vh,width:4,height:vh,fill:i%3?"#f85149":"#3fb950",opacity:"0.8"}));
+  }
+}
+function drawFull(){
+  var s=document.getElementById("full"); grid(s,900,320);
+  s.appendChild(svgEl("polyline",{points:path,fill:"none",stroke:"#3fb950","stroke-width":"2"}));
+  s.appendChild(svgEl("polyline",{points:"20,40 200,120 201,120 400,175 401,175 700,168 701,150 880,120",fill:"none",stroke:"#f85149","stroke-width":"1.4"}));
+  s.appendChild(svgEl("polyline",{points:"20,55 880,150",fill:"none",stroke:"#58a6ff","stroke-width":"1.2"}));
+  s.appendChild(svgEl("line",{x1:0,x2:900,y1:128,y2:128,stroke:"#f85149","stroke-dasharray":"4 3"}));
+  s.appendChild(svgEl("line",{x1:0,x2:900,y1:150,y2:150,stroke:"#3fb950","stroke-dasharray":"4 3"}));
+  vol(s,900,320);
+  var t=svgEl("text",{x:820,y:124,fill:"#f85149","font-size":"11"}); t.textContent="R 92.43"; s.appendChild(t);
+}
+function drawClean(id, zoom){
+  var s=document.getElementById(id); grid(s,900,320);
+  if(zoom){
+    candles(s,150,80,56,900,0);
+    s.appendChild(svgEl("line",{x1:0,x2:900,y1:70,y2:70,stroke:"#f85149","stroke-dasharray":"4 3"}));
+    s.appendChild(svgEl("line",{x1:0,x2:900,y1:210,y2:210,stroke:"#3fb950","stroke-dasharray":"4 3"}));
+  } else {
+    s.appendChild(svgEl("polyline",{points:path,fill:"none",stroke:"#8b949e","stroke-width":"1",opacity:"0.0"}));
+    candles(s,40,200,42,900,0);
+    s.appendChild(svgEl("line",{x1:0,x2:900,y1:150,y2:150,stroke:"#f85149","stroke-dasharray":"4 3"}));
+    s.appendChild(svgEl("line",{x1:0,x2:900,y1:210,y2:210,stroke:"#3fb950","stroke-dasharray":"4 3"}));
+  }
+  vol(s,900,320);
+}
+function drawSide(){
+  var s=document.getElementById("side"); grid(s,680,340);
+  candles(s,70,200,36,680,0);
+  s.appendChild(svgEl("line",{x1:0,x2:680,y1:90,y2:90,stroke:"#f85149","stroke-dasharray":"4 3"}));
+  s.appendChild(svgEl("line",{x1:0,x2:680,y1:230,y2:230,stroke:"#3fb950","stroke-dasharray":"4 3"}));
+  vol(s,680,340);
+}
+drawFull(); drawClean("clean", false); drawClean("zoom", true); drawSide();
+document.querySelectorAll("#pick button").forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll("#pick button").forEach(function(x){x.classList.remove("on")});
+    b.classList.add("on");
+    document.querySelectorAll(".page").forEach(function(p){p.classList.toggle("on", p.id===b.dataset.v)});
+  };
+});
+</script>
+</body>
+</html>

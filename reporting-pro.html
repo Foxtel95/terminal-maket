@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Отчётность TATN</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0d1117; --card:#161b22; --elev:#1c2128; --line:#30363d; --text:#e6edf3; --dim:#8b949e; --acc:#d4a017; --green:#3fb950; --red:#f85149; --blue:#58a6ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:"IBM Plex Sans",sans-serif; font-size:14px; }
+  .num { font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; }
+  header { height:52px; display:flex; align-items:center; padding:0 16px; background:var(--card); border-bottom:1px solid var(--line); font-weight:700; }
+  .app { display:flex; min-height:calc(100vh - 52px); }
+  aside { width:232px; flex:none; background:var(--card); border-right:1px solid var(--line); padding:10px; }
+  .nb { display:block; width:100%; text-align:left; background:transparent; border:0; border-left:3px solid transparent; color:var(--dim); padding:9px 10px; border-radius:6px; font:inherit; font-weight:500; }
+  .nb.on { background:var(--elev); color:var(--text); border-left-color:var(--acc); }
+  main { flex:1; min-width:0; padding:16px 20px 32px; }
+  .top { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; flex-wrap:wrap; }
+  h1 { margin:0; font-size:20px; }
+  .dim { color:var(--dim); }
+  .up { color:var(--green); } .dn { color:var(--red); }
+  .tools { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  button.t { background:var(--elev); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:6px 10px; font:inherit; font-size:12px; cursor:pointer; }
+  button.t.on { background:var(--acc); color:#14100a; border-color:var(--acc); font-weight:600; }
+  .warn { margin:12px 0; padding:8px 10px; border:1px solid #5a2a28; background:#2a1616; border-radius:8px; font-size:13px; }
+  .kpis { display:grid; grid-template-columns:repeat(8,1fr); gap:8px; margin:12px 0; }
+  .kpi { background:var(--elev); border:1px solid var(--line); border-radius:8px; padding:8px 10px; }
+  .kpi b { display:block; font-size:16px; margin-top:2px; }
+  .kpi span { color:var(--dim); font-size:11px; }
+  .grid { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(280px,.8fr); gap:12px; align-items:start; }
+  .panel { background:var(--elev); border:1px solid var(--line); border-radius:8px; padding:12px; margin-bottom:12px; }
+  h2 { margin:0 0 8px; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--dim); font-weight:600; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { padding:5px 6px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; }
+  th:first-child, td:first-child { text-align:left; color:var(--text); font-weight:500; }
+  th { color:var(--dim); font-weight:600; font-size:11px; }
+  tr.gap td { color:#6e7681; font-weight:400; }
+  tr.sec td { padding-top:10px; color:var(--acc); font-size:11px; letter-spacing:.05em; text-transform:uppercase; border-bottom:0; text-align:left; }
+  .src { font-size:12px; color:var(--dim); line-height:1.45; }
+  .row { display:flex; justify-content:space-between; gap:12px; padding:5px 0; border-bottom:1px solid var(--line); }
+  .row:last-child { border:0; }
+  svg { width:100%; height:auto; display:block; }
+  @media (max-width:1100px) { .kpis { grid-template-columns:repeat(4,1fr); } .grid { grid-template-columns:1fr; } aside { display:none; } }
+</style>
+</head>
+<body>
+<header>Terminal</header>
+<div class="app">
+  <aside>
+    <div class="nb">Сегодня</div>
+    <div class="nb">График</div>
+    <div class="nb">Сигналы</div>
+    <div class="nb">Объёмы</div>
+    <div class="nb">Портфель</div>
+    <div class="nb">Расчёты</div>
+    <div class="nb">Инструменты</div>
+    <div class="nb on">Отчётность</div>
+    <div class="nb">Торговый бот</div>
+  </aside>
+  <main>
+    <div class="top">
+      <div>
+        <h1>TATN <span class="dim" style="font-weight:500">Татнефть</span></h1>
+        <div class="dim">Нефть и газ · вес в IMOEX 6,57% · добыча и переработка (ТАНЕКО), нефтехимия, шины</div>
+        <div style="margin-top:4px">Цена <b class="num">611,40 ₽</b> · капитализация <b class="num">1 333 млрд ₽</b></div>
+      </div>
+      <div class="tools">
+        <button class="t on">Кварталы</button>
+        <button class="t">Годы</button>
+        <button class="t on">4 кв.</button>
+        <button class="t">8 кв.</button>
+        <button class="t">Обновить TATN</button>
+      </div>
+    </div>
+    <div class="warn">Кварталы с дырами. Нет отчёта за 2025Q1, 2025Q3 и 2026Q1. 2026Q2 закончился 131 день назад, следующего отчёта нет. Источник smart-lab, снято 08.11.2026 20:18. Это не официальная отчётность.</div>
+    <div class="kpis">
+      <div class="kpi"><span>P/E, TTM</span><b class="num">5,1</b></div>
+      <div class="kpi"><span>EV/EBITDA</span><b class="num">2,7</b></div>
+      <div class="kpi"><span>ROE</span><b class="num">19,6%</b></div>
+      <div class="kpi"><span>Чистая маржа</span><b class="num">14,5%</b></div>
+      <div class="kpi"><span>ND/EBITDA</span><b class="num">−0,3</b></div>
+      <div class="kpi"><span>Див. за 12 мес</span><b class="num">8,6%</b></div>
+      <div class="kpi"><span>Оценка DPS</span><b class="num">35,50 ₽</b></div>
+      <div class="kpi"><span>Доходность оценки</span><b class="num">5,8%</b></div>
+    </div>
+    <div class="grid">
+      <div>
+        <div class="panel">
+          <h2>Отчёт по кварталам, млрд ₽</h2>
+          <table>
+            <thead>
+              <tr><th></th><th>2025 Q2</th><th>2025 Q3</th><th>2025 Q4</th><th>2026 Q1</th><th>2026 Q2</th><th>к году</th></tr>
+            </thead>
+            <tbody>
+              <tr class="sec"><td colspan="7">Прибыль</td></tr>
+              <tr><td>Выручка</td><td class="num">878,1</td><td class="gap">нет</td><td class="num">939,9</td><td class="gap">нет</td><td class="num">881,6</td><td class="num">+0%</td></tr>
+              <tr><td>EBITDA</td><td class="num">144,4</td><td class="gap">нет</td><td class="num">183,1</td><td class="gap">нет</td><td class="num">259,2</td><td class="num up">+80%</td></tr>
+              <tr><td>Опер. прибыль</td><td class="num">111,2</td><td class="gap">нет</td><td class="num">143,1</td><td class="gap">нет</td><td class="num">222,0</td><td class="num up">+100%</td></tr>
+              <tr><td>Чистая прибыль</td><td class="num">58,0</td><td class="gap">нет</td><td class="num">100,6</td><td class="gap">нет</td><td class="num">165,2</td><td class="num up">+185%</td></tr>
+              <tr><td>Чистая маржа</td><td class="num">6,6%</td><td class="gap">нет</td><td class="num">10,7%</td><td class="gap">нет</td><td class="num">18,7%</td><td class="num up">+12,1 п.п.</td></tr>
+              <tr class="sec"><td colspan="7">Деньги и баланс</td></tr>
+              <tr><td>FCF</td><td class="num">35,2</td><td class="gap">нет</td><td class="num">79,9</td><td class="gap">нет</td><td class="num">143,4</td><td class="num up">+307%</td></tr>
+              <tr><td>Чистый долг</td><td class="num">6,4</td><td class="gap">нет</td><td class="num">−32,0</td><td class="gap">нет</td><td class="num">−133,4</td><td class="dim">база была около нуля</td></tr>
+              <tr><td>ND/EBITDA</td><td class="num">0,0</td><td class="gap">нет</td><td class="num">−0,1</td><td class="gap">нет</td><td class="num">−0,3</td><td></td></tr>
+              <tr><td>Капитал</td><td class="num">1 558</td><td class="gap">нет</td><td class="num">1 346</td><td class="gap">нет</td><td class="num">1 164</td><td class="num dn">−25%</td></tr>
+              <tr><td>Активы</td><td class="num">2 088</td><td class="gap">нет</td><td class="num">2 134</td><td class="gap">нет</td><td class="num">2 204</td><td class="num up">+6%</td></tr>
+              <tr class="sec"><td colspan="7">На акцию</td></tr>
+              <tr><td>EPS, ₽</td><td class="num">26,6</td><td class="gap">нет</td><td class="num">46,2</td><td class="gap">нет</td><td class="num">75,8</td><td class="num up">+185%</td></tr>
+              <tr><td>Дивиденд, ₽</td><td class="num">14,4</td><td class="gap">нет</td><td class="num">11,6</td><td class="gap">нет</td><td class="num">32,9</td><td class="num up">+129%</td></tr>
+            </tbody>
+          </table>
+          <p class="src">Столбец «к году» — 2026Q2 к 2025Q2, как в текущей карточке. Пустые кварталы раньше пропадали из таблицы, из‑за этого ряд выглядел сплошным. Мультипликаторы P/E, P/S, P/B здесь не повторяются: они в полосе сверху, источник T-Invest TTM на 08.11.2026.</p>
+        </div>
+        <div class="panel">
+          <h2>Выручка и прибыль</h2>
+          <svg viewBox="0 0 640 180">
+            <line x1="40" y1="150" x2="620" y2="150" stroke="#30363d"/>
+            <g fill="#8b949e" font-size="11">
+              <text x="70" y="168">2024 Q4</text><text x="210" y="168">2025 Q2</text><text x="350" y="168">2025 Q4</text><text x="490" y="168">2026 Q2</text>
+            </g>
+            <g>
+              <rect x="78" y="20" width="22" height="130" fill="#58a6ff"/>
+              <rect x="104" y="132" width="22" height="18" fill="#3fb950"/>
+              <rect x="218" y="46" width="22" height="104" fill="#58a6ff"/>
+              <rect x="244" y="143" width="22" height="7" fill="#3fb950"/>
+              <rect x="358" y="39" width="22" height="111" fill="#58a6ff"/>
+              <rect x="384" y="138" width="22" height="12" fill="#3fb950"/>
+              <rect x="498" y="46" width="22" height="104" fill="#58a6ff"/>
+              <rect x="524" y="130" width="22" height="20" fill="#3fb950"/>
+            </g>
+            <g fill="#8b949e" font-size="11">
+              <rect x="40" y="8" width="8" height="8" fill="#58a6ff"/><text x="52" y="16">Выручка</text>
+              <rect x="120" y="8" width="8" height="8" fill="#3fb950"/><text x="132" y="16">Чистая прибыль</text>
+            </g>
+          </svg>
+          <p class="src">Масштаб по выручке 1 099 млрд в 2024Q4. Прибыль на том же масштабе, поэтому столбик низкий. Пропущенные кварталы на графике не заполнены нулём.</p>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <h2>Что изменилось, 2026Q2 к 2025Q2</h2>
+          <div class="row"><span>Выручка</span><b class="num">878,1 → 881,6</b></div>
+          <div class="row"><span>Прибыль</span><b class="num up">58,0 → 165,2</b></div>
+          <div class="row"><span>Маржа</span><b class="num up">6,6% → 18,7%</b></div>
+          <div class="row"><span>FCF</span><b class="num up">35,2 → 143,4</b></div>
+          <div class="row"><span>Капитал</span><b class="num dn">1 558 → 1 164</b></div>
+          <p class="src">Число акций к 2024 не изменилось (+0,0%). Падение капитала не из размытия. FCF в 2026Q2 — 87% чистой прибыли. Покрытие процентов: EBITDA / проценты = 127,9 за 2025.</p>
+        </div>
+        <div class="panel">
+          <h2>Дивиденды</h2>
+          <p style="margin:0 0 8px">Не менее 50% от большей из чистой прибыли МСФО и РСБУ. Три раза в год. Обыкновенные и привилегированные равны.</p>
+          <div class="row"><span>Выплачено за 12 мес</span><b class="num">52,62 ₽ · 8,6%</b></div>
+          <div class="row"><span>За 2025 по политике</span><b class="num">34,09 ₽ · 100%</b></div>
+          <div class="row"><span>Оценка следующего</span><b class="num">35,50 ₽ · 5,8%</b></div>
+          <div class="row"><span>Ближайшая отсечка</span><b>не объявлена</b></div>
+          <div class="row"><span>DSI</span><b class="num">0,50</b></div>
+          <p class="src">Оценка: ЧП МСФО за 3 месяца 2026 года 165,2 млрд × 50% / 2 326 млн акций. РСБУ в ряде нет, поэтому сравнение двух стандартов не сделано. Уверенность в карточке: средняя. Прогноз dohod.ru на 12 месяцев 84,42 ₽ (13,45%) — другая методика, не этот расчёт.</p>
+        </div>
+        <div class="panel">
+          <h2>Внешние факторы</h2>
+          <div class="row"><span>USD к среднему 2026Q2</span><b class="num">82,14 · +10,2%</b></div>
+          <div class="row"><span>EUR</span><b class="num">92,19 · +6,2%</b></div>
+          <div class="row"><span>CNY</span><b class="num">12,27 · +12,2%</b></div>
+          <div class="row"><span>Нефть за день, 08.11</span><b class="num dn">−13,9%</b></div>
+          <p class="src">Экспортёр: более слабый рубль увеличивает рублёвую выручку. Нефть на карточке — изменение за день, не за квартал. Налог на прибыль 25% с 2025 года. Порога долга и достаточности капитала в дивидендной политике нет, эти проверки пустые.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

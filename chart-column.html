@@ -21,20 +21,21 @@
   .sub.on { display:block; }
   .sub label { display:flex; justify-content:space-between; gap:8px; font-size:12px; color:var(--dim); padding:4px 6px; cursor:pointer; }
   .grow { flex:1; }
-  .desk { flex:1; display:grid; grid-template-columns:200px 1fr 268px; min-width:0; }
-  .list, .book { background:var(--card); overflow:auto; }
-  .list { border-right:1px solid var(--line); }
-  .book { border-left:1px solid var(--line); padding:10px; }
+  .desk { flex:1; display:grid; grid-template-columns:200px minmax(0,1fr) 268px; min-width:0; align-items:start; padding:16px; gap:0; background:var(--bg); }
+  .list, .book { background:var(--card); overflow:auto; height:516px; }
+  .list { border:1px solid var(--line); border-right:0; border-radius:6px 0 0 6px; }
+  .book { border:1px solid var(--line); border-left:0; border-radius:0 6px 6px 0; padding:10px; }
   .search { margin:8px; width:calc(100% - 16px); background:var(--elev); border:1px solid var(--line); color:var(--text); border-radius:6px; padding:6px 8px; font:inherit; }
   .row { display:flex; justify-content:space-between; padding:8px 10px; cursor:pointer; border-left:3px solid transparent; }
   .row.on { background:var(--elev); border-left-color:var(--acc); }
   .row:hover { background:var(--elev); }
   .up { color:var(--green); } .dn { color:var(--red); }
-  .chart { display:flex; flex-direction:column; min-width:0; background:#0a0c10; }
-  .bar { display:flex; gap:6px; align-items:center; padding:8px 10px; border-bottom:1px solid var(--line); }
+  .chart { display:flex; flex-direction:column; min-width:0; background:#0a0c10; border:1px solid var(--line); border-radius:6px; height:516px; }
+  .bar { display:flex; gap:6px; align-items:center; padding:8px 10px; border-bottom:1px solid var(--line); height:56px; flex:none; }
   .chip { border:1px solid var(--line); background:transparent; color:var(--dim); border-radius:6px; padding:4px 8px; font:inherit; font-size:12px; cursor:pointer; }
   .chip.on { background:var(--acc); color:#1a1408; border-color:transparent; font-weight:600; }
-  canvas { width:100%; flex:1; min-height:0; }
+  canvas#c { width:100%; height:460px; flex:none; display:block; }
+  canvas#osc { width:100%; height:0; flex:none; display:block; background:#0a0c10; }
   h3 { margin:0 0 8px; font-size:11px; letter-spacing:.08em; color:var(--dim); }
   .ln { display:grid; grid-template-columns:64px 1fr 48px; gap:6px; align-items:center; margin:3px 0; cursor:pointer; }
   .ln:hover { background:var(--elev); }
@@ -92,6 +93,7 @@
         <span class="hint" id="ohlc">Макет, не биржа. Индикаторы и уровни выключены.</span>
       </div>
       <canvas id="c"></canvas>
+      <canvas id="osc"></canvas>
     </div>
     <aside class="book" id="book"></aside>
   </div>
@@ -116,7 +118,7 @@ function book(){
   var asks=[["90.40",62],["90.15",40],["89.95",48],["89.88",28],["89.70",44]];
   var bids=[["89.60",70],["89.40",84],["89.20",36],["89.00",50],["88.70",30]];
   var h='<h3>СТАКАН · образец</h3>';
-  asks.slice().reverse().forEach(function(a){ h+='<div class="ln" data-p="'+a[0]+'"><span class="num dn">'+a[0]+'</span><span class="gbar ask" style="width:'+a[1]+'%"></span><span class="num">'+a[1]+'</span></div>'; });
+  asks.forEach(function(a){ h+='<div class="ln" data-p="'+a[0]+'"><span class="num dn">'+a[0]+'</span><span class="gbar ask" style="width:'+a[1]+'%"></span><span class="num">'+a[1]+'</span></div>'; });
   h+='<div class="ln"><span></span><b class="num" style="color:var(--acc)">89.88</b><span class="num">спред 0.10</span></div>';
   bids.forEach(function(b){ h+='<div class="ln" data-p="'+b[0]+'"><span class="num up">'+b[0]+'</span><span class="gbar bid" style="width:'+b[1]+'%"></span><span class="num">'+b[1]+'</span></div>'; });
   h+='<div class="mean">Зелёные — заявки на покупку, красные — на продажу. Полоса — лоты. Клик по цене ставит на график одну линию и копирует число. Это не книга VSEH.</div>';
@@ -127,22 +129,24 @@ function book(){
 }
 function draw(){
   var c=document.getElementById("c"), dpr=2, r=c.getBoundingClientRect();
-  c.width=r.width*dpr; c.height=r.height*dpr;
-  var ctx=c.getContext("2d"), w=c.width, h=c.height, L=8, R=64, B=h*0.18;
+  c.width=Math.max(10,r.width)*dpr; c.height=460*dpr;
+  var ctx=c.getContext("2d"), w=c.width, h=c.height, L=8, R=72;
+  var volH=h*0.20, priceBottom=h*0.25;
   ctx.fillStyle="#0a0c10"; ctx.fillRect(0,0,w,h);
   var min=1e9,max=-1e9; bars.forEach(function(b){ min=Math.min(min,b.l); max=Math.max(max,b.h); });
   if(on.sma){ I.sma20.concat(I.sma50).forEach(function(v){ if(v){min=Math.min(min,v); max=Math.max(max,v);} }); }
   if(on.ema){ I.ema9.concat(I.ema21).forEach(function(v){ min=Math.min(min,v); max=Math.max(max,v); }); }
-  var pad=(max-min)*0.08; min-=pad; max+=pad;
-  var y=function(v){ return 16+(1-(v-min)/(max-min))*(h-B-24); };
+  var pad=(max-min)*0.06; min-=pad; max+=pad;
+  var y=function(v){ return 12+(1-(v-min)/(max-min))*(h-priceBottom-20); };
   var x=function(i){ return L+(i+0.5)*((w-L-R)/bars.length); };
-  ctx.strokeStyle="#21262d"; for(var g=1;g<4;g++){ ctx.beginPath(); ctx.moveTo(0,g*(h-B)/4); ctx.lineTo(w-R,g*(h-B)/4); ctx.stroke(); }
+  ctx.strokeStyle="#1c2128"; for(var g=1;g<4;g++){ ctx.beginPath(); ctx.moveTo(0,g*(h-priceBottom)/4); ctx.lineTo(w-R,g*(h-priceBottom)/4); ctx.stroke(); }
   var cw=Math.max(2,((w-L-R)/bars.length)*0.62), vmax=0; bars.forEach(function(b){ vmax=Math.max(vmax,b.v); });
   bars.forEach(function(b,i){
     var up=b.c>=b.o, col=up?"#3fb950":"#f85149", xc=x(i);
     ctx.strokeStyle=col; ctx.beginPath(); ctx.moveTo(xc,y(b.h)); ctx.lineTo(xc,y(b.l)); ctx.stroke();
     ctx.fillStyle=col; ctx.fillRect(xc-cw/2, y(Math.max(b.o,b.c)), cw, Math.max(1,y(Math.min(b.o,b.c))-y(Math.max(b.o,b.c))));
-    ctx.globalAlpha=.8; ctx.fillRect(xc-cw/2, h-6-(b.v/vmax)*(B-14), cw, (b.v/vmax)*(B-14)); ctx.globalAlpha=1;
+    var vh=(b.v/vmax)*(volH-10);
+    ctx.globalAlpha=.55; ctx.fillRect(xc-cw/2, h-4-vh, cw, vh); ctx.globalAlpha=1;
   });
   function stroke(arr,color){ ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=1.6; var s=false; arr.forEach(function(v,i){ if(v==null)return; var px=x(i),py=y(v); if(!s){ctx.moveTo(px,py); s=true;} else ctx.lineTo(px,py); }); ctx.stroke(); }
   if(on.sma){ stroke(I.sma20,"#58a6ff"); stroke(I.sma50,"#d4a017"); }
@@ -151,8 +155,14 @@ function draw(){
   if(levels){ [["92.43","#f85149","R"],["84.36","#3fb950","S"]].forEach(function(z){ ctx.setLineDash([6,4]); ctx.strokeStyle=z[1]; ctx.beginPath(); ctx.moveTo(0,y(+z[0])); ctx.lineTo(w-R,y(+z[0])); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle=z[1]; ctx.font="20px sans-serif"; ctx.fillText(z[2]+" "+z[0], w-R+4, y(+z[0])); }); }
   if(window._line){ ctx.strokeStyle="#d4a017"; ctx.beginPath(); ctx.moveTo(0,y(window._line)); ctx.lineTo(w-R,y(window._line)); ctx.stroke(); }
   var osc=["atr","adx","stoch","obv"].filter(function(k){return on[k];});
+  var box=document.querySelector(".chart"), sideH=516+(osc.length?170:0);
+  box.style.height=sideH+"px";
+  document.querySelector(".list").style.height=sideH+"px";
+  document.querySelector(".book").style.height=sideH+"px";
+  var oc=document.getElementById("osc");
+  oc.style.height=osc.length?"170px":"0px";
   document.getElementById("ohlc").textContent = (Object.keys(on).some(function(k){return on[k];})||levels) ? "Макет. Линии только по кнопкам." : "Макет, не биржа. Индикаторы и уровни выключены.";
-  if(osc.length) document.getElementById("ohlc").textContent += " Осциллятор: "+osc.join(", ")+".";
+  if(osc.length) document.getElementById("ohlc").textContent += " Осциллятор 170px: "+osc.join(", ")+".";
 }
 document.getElementById("btnInd").onclick=function(){ document.getElementById("indBox").classList.toggle("on"); this.classList.toggle("on"); };
 document.getElementById("btnLvl").onclick=function(){ levels=!levels; this.classList.toggle("on", levels); draw(); };
